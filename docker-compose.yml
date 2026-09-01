@@ -1,0 +1,70 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-appraisal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-appraisal}
+      POSTGRES_DB: ${POSTGRES_DB:-appraisal}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appraisal} -d ${POSTGRES_DB:-appraisal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-appraisal}:${POSTGRES_PASSWORD:-appraisal}@db:5432/${POSTGRES_DB:-appraisal}
+      JWT_SECRET: ${JWT_SECRET:-change-me-phase1-dev-secret}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      LLM_PROVIDER: none
+      LLM_API_KEY: ""
+      LLM_MODEL: ""
+      MAX_HEAL_ATTEMPTS: "3"
+      CORS_ORIGINS: http://localhost:5173
+      SEED_ADMIN_EMAIL: admin@demo.local
+      SEED_ADMIN_PASSWORD: admin-demo
+      SEED_FACULTY_EMAIL: faculty@demo.local
+      SEED_FACULTY_PASSWORD: faculty-demo
+      SEED_HOD_EMAIL: hod@demo.local
+      SEED_HOD_PASSWORD: hod-demo
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-minio}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-faculty-evidence}
+      MINIO_SECURE: "false"
+      MAX_UPLOAD_SIZE: "10485760"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  minio_data:

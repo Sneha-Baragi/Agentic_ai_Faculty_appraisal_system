@@ -1,0 +1,41 @@
+{
+  "id": "DEMO_RUBRIC_v1",
+  "name": "DEMO/TEST Faculty Appraisal Rubric",
+  "version": "1",
+  "is_demo": true,
+  "disclaimer": "DEMO/TEST WEIGHTAGES — NOT OFFICIAL UGC. For academic demonstration only.",
+  "engine_notes": "Numeric totals are produced only by scoring.engine, never by an LLM.",
+  "categories": {
+    "research": {
+      "weight": 0.4,
+      "items": {
+        "journal_paper": { "points": 10, "cap": 40 },
+        "conference_paper": { "points": 5, "cap": 20 },
+        "funded_project": { "points": 15, "cap": 30 },
+        "patent": { "points": 20, "cap": 20 }
+      }
+    },
+    "teaching": {
+      "weight": 0.4,
+      "items": {
+        "course_delivery": { "points_per_hour": 0.5, "cap": 30 },
+        "pedagogy_innovation": { "points": 10, "cap": 20 },
+        "student_feedback": { "points": 5, "cap": 10 }
+      }
+    },
+    "administrative": {
+      "weight": 0.2,
+      "items": {
+        "committee_role": { "points": 8, "cap": 16 },
+        "coordinator": { "points": 10, "cap": 20 },
+        "outreach": { "points": 5, "cap": 10 }
+      }
+    }
+  },
+  "rating_bands": [
+    { "min": 80, "rating": "A" },
+    { "min": 65, "rating": "B" },
+    { "min": 50, "rating": "C" },
+    { "min": 0, "rating": "D" }
+  ]
+}
