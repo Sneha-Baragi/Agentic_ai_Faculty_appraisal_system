@@ -4,10 +4,12 @@ from copy import deepcopy
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from langgraph.types import Command
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.agents.graph import checkpointed_graph
 from app.api.deps import get_db, require_roles
 from app.models import ApprovalDecision, AppraisalReport, AppraisalScore, AuditLog, Evidence, FacultyActivity, FacultyAppraisalRun, FacultyProfile, User
 from app.services.activities import activity_to_dict
@@ -161,43 +163,288 @@ def _approval_status(run: FacultyAppraisalRun) -> str:
     return run.approval_status if run.approval_status != "not_generated" else run.status
 
 
-def _decide(db: Session, *, faculty_id: str, action: str, request: ApprovalRequest, reviewer: User) -> dict:
+# def _decide(db: Session, *, faculty_id: str, action: str, request: ApprovalRequest, reviewer: User) -> dict:
+#     cycle = get_open_cycle(db)
+#     if cycle is None:
+#         raise HTTPException(status_code=404, detail="No open appraisal cycle")
+#     profile = db.scalar(select(FacultyProfile).where(FacultyProfile.id == faculty_id))
+#     if profile is None:
+#         raise HTTPException(status_code=404, detail="Faculty not found")
+#     run = db.scalar(select(FacultyAppraisalRun).where(FacultyAppraisalRun.faculty_id == profile.id, FacultyAppraisalRun.cycle_id == cycle.id))
+#     if run is None:
+#         raise HTTPException(status_code=404, detail="Appraisal not found")
+#     current = _approval_status(run)
+#     if action == "approve" and current == "approved":
+#         return {"status": current, "message": "Appraisal is already approved"}
+#     if current != "awaiting_review":
+#         raise HTTPException(status_code=409, detail=f"Cannot {action} appraisal from status '{current}'")
+#     if action in {"reject", "request_changes"} and not (request.reason or "").strip():
+#         raise HTTPException(status_code=422, detail="A reason is required")
+#     report = latest_report(db, run_id=run.id)
+#     if report is None:
+#         raise HTTPException(status_code=409, detail="Appraisal report not found")
+#     decided_at = datetime.now(timezone.utc)
+#     status_value = {"approve": "approved", "reject": "rejected", "request_changes": "changes_requested"}[action]
+#     reason = request.reason.strip() if request.reason else None
+#     comment = request.comment.strip() if request.comment else None
+#     run.approval_status = status_value
+#     run.reviewer_id = reviewer.id
+#     run.approved_at = decided_at
+#     run.rejection_reason = reason if action == "reject" else None
+#     run.change_request_reason = reason if action == "request_changes" else None
+#     run.approval_comment = comment
+#     run.updated_at = decided_at
+#     update_report_approval(report, status=status_value, reviewer=reviewer.email, decided_at=decided_at, reason=reason, comment=comment)
+#     db.add(ApprovalDecision(report_id=report.id, reviewer_id=reviewer.id, action=action, comments=reason or comment))
+#     db.add(AuditLog(actor_id=reviewer.id, action=f"appraisal_{action}", entity_type="faculty_appraisal_run", entity_id=str(run.id), before={"approval_status": current}, after={"approval_status": status_value, "report_id": str(report.id), "comment": reason or comment}))
+#     db.commit()
+#     return {"status": status_value, "message": f"Appraisal {status_value}", "reviewer": reviewer.email, "decided_at": decided_at.isoformat(), "reason": reason, "comment": comment}
+
+def _decide(
+    db: Session,
+    *,
+    faculty_id: str,
+    action: str,
+    request: ApprovalRequest,
+    reviewer: User,
+) -> dict:
     cycle = get_open_cycle(db)
+
     if cycle is None:
-        raise HTTPException(status_code=404, detail="No open appraisal cycle")
-    profile = db.scalar(select(FacultyProfile).where(FacultyProfile.id == faculty_id))
+        raise HTTPException(
+            status_code=404,
+            detail="No open appraisal cycle",
+        )
+
+    profile = db.scalar(
+        select(FacultyProfile).where(
+            FacultyProfile.id == faculty_id
+        )
+    )
+
     if profile is None:
-        raise HTTPException(status_code=404, detail="Faculty not found")
-    run = db.scalar(select(FacultyAppraisalRun).where(FacultyAppraisalRun.faculty_id == profile.id, FacultyAppraisalRun.cycle_id == cycle.id))
+        raise HTTPException(
+            status_code=404,
+            detail="Faculty not found",
+        )
+
+    run = db.scalar(
+        select(FacultyAppraisalRun).where(
+            FacultyAppraisalRun.faculty_id == profile.id,
+            FacultyAppraisalRun.cycle_id == cycle.id,
+        )
+    )
+
     if run is None:
-        raise HTTPException(status_code=404, detail="Appraisal not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Appraisal not found",
+        )
+
     current = _approval_status(run)
+
+    if action not in {
+        "approve",
+        "reject",
+        "request_changes",
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid governance action: {action}",
+        )
+
     if action == "approve" and current == "approved":
-        return {"status": current, "message": "Appraisal is already approved"}
+        return {
+            "status": current,
+            "message": "Appraisal is already approved",
+        }
+
     if current != "awaiting_review":
-        raise HTTPException(status_code=409, detail=f"Cannot {action} appraisal from status '{current}'")
-    if action in {"reject", "request_changes"} and not (request.reason or "").strip():
-        raise HTTPException(status_code=422, detail="A reason is required")
-    report = latest_report(db, run_id=run.id)
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Cannot {action} appraisal "
+                f"from status '{current}'"
+            ),
+        )
+
+    if not run.graph_thread_id:
+        raise HTTPException(
+            status_code=409,
+            detail="Appraisal has no LangGraph thread ID",
+        )
+
+    if action in {"reject", "request_changes"} and not (
+        request.reason or ""
+    ).strip():
+        raise HTTPException(
+            status_code=422,
+            detail="A reason is required",
+        )
+
+    report = latest_report(
+        db,
+        run_id=run.id,
+    )
+
     if report is None:
-        raise HTTPException(status_code=409, detail="Appraisal report not found")
+        raise HTTPException(
+            status_code=409,
+            detail="Appraisal report not found",
+        )
+
+    reason = (
+        request.reason.strip()
+        if request.reason
+        else None
+    )
+
+    comment = (
+        request.comment.strip()
+        if request.comment
+        else None
+    )
+
+    # ---------------------------------------------------------
+    # Phase 5C / Lab 3:
+    # Resume the SAME interrupted LangGraph thread.
+    #
+    # The authenticated reviewer identity is NOT taken from
+    # client input. The graph only receives the governance
+    # action and reason.
+    # ---------------------------------------------------------
+
+    try:
+        resumed_state = checkpointed_graph.invoke(
+            Command(
+                resume={
+                    "action": action,
+                    "reason": reason,
+                }
+            ),
+            config={
+                "configurable": {
+                    "thread_id": run.graph_thread_id,
+                }
+            },
+        )
+    except Exception as exc:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Unable to resume the appraisal workflow: "
+                f"{exc}"
+            ),
+        ) from exc
+
+    approval = resumed_state.get("approval") or {}
+
+    resumed_action = approval.get("action")
+
+    if resumed_action != action:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "LangGraph governance action did not match "
+                "the requested action"
+            ),
+        )
+
+    status_map = {
+        "approve": "approved",
+        "reject": "rejected",
+        "request_changes": "changes_requested",
+    }
+
+    status_value = status_map[action]
+
+    graph_status = approval.get("status")
+
+    if graph_status != status_value:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "LangGraph returned an unexpected governance "
+                f"status: {graph_status}"
+            ),
+        )
+
     decided_at = datetime.now(timezone.utc)
-    status_value = {"approve": "approved", "reject": "rejected", "request_changes": "changes_requested"}[action]
-    reason = request.reason.strip() if request.reason else None
-    comment = request.comment.strip() if request.comment else None
+
+    # ---------------------------------------------------------
+    # Synchronize the durable database governance state with
+    # the completed LangGraph governance decision.
+    # ---------------------------------------------------------
+
     run.approval_status = status_value
     run.reviewer_id = reviewer.id
     run.approved_at = decided_at
-    run.rejection_reason = reason if action == "reject" else None
-    run.change_request_reason = reason if action == "request_changes" else None
+    run.rejection_reason = (
+        reason if action == "reject" else None
+    )
+    run.change_request_reason = (
+        reason if action == "request_changes" else None
+    )
     run.approval_comment = comment
     run.updated_at = decided_at
-    update_report_approval(report, status=status_value, reviewer=reviewer.email, decided_at=decided_at, reason=reason, comment=comment)
-    db.add(ApprovalDecision(report_id=report.id, reviewer_id=reviewer.id, action=action, comments=reason or comment))
-    db.add(AuditLog(actor_id=reviewer.id, action=f"appraisal_{action}", entity_type="faculty_appraisal_run", entity_id=str(run.id), before={"approval_status": current}, after={"approval_status": status_value, "report_id": str(report.id), "comment": reason or comment}))
-    db.commit()
-    return {"status": status_value, "message": f"Appraisal {status_value}", "reviewer": reviewer.email, "decided_at": decided_at.isoformat(), "reason": reason, "comment": comment}
 
+    update_report_approval(
+        report,
+        status=status_value,
+        reviewer=reviewer.email,
+        decided_at=decided_at,
+        reason=reason,
+        comment=comment,
+    )
+
+    db.add(
+        ApprovalDecision(
+            report_id=report.id,
+            reviewer_id=reviewer.id,
+            action=action,
+            comments=reason or comment,
+        )
+    )
+
+    db.add(
+        AuditLog(
+            actor_id=reviewer.id,
+            action=f"appraisal_{action}",
+            entity_type="faculty_appraisal_run",
+            entity_id=str(run.id),
+            before={
+                "approval_status": current,
+            },
+            after={
+                "approval_status": status_value,
+                "report_id": str(report.id),
+                "comment": reason or comment,
+                "graph_thread_id": run.graph_thread_id,
+            },
+        )
+    )
+
+    db.commit()
+
+    return {
+        "status": status_value,
+        "message": f"Appraisal {status_value}",
+        "reviewer": reviewer.email,
+        "decided_at": decided_at.isoformat(),
+        "reason": reason,
+        "comment": comment,
+        "graph": {
+            "resumed": True,
+            "thread_id": run.graph_thread_id,
+            "action": action,
+        },
+    }
 
 @router.post("/faculty/{faculty_id}/approve")
 def approve_appraisal(faculty_id: str, request: ApprovalRequest | None = None, db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> dict:

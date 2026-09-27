@@ -30,7 +30,7 @@ def test_graph_compiles_and_reaches_human_gate_placeholder() -> None:
             "api_calculation",
             "report_generation",
             "validation_gate",
-            "human_gate_placeholder",
+            "human_gate",
         )
 
 

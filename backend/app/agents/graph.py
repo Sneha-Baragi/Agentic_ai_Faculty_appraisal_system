@@ -77,7 +77,7 @@ def evidence_validation(state: AppraisalGraphState) -> dict:
             accepted.append(item)
         else:
             rejected.append({**item, "reason": "missing_or_invalid_evidence"})
-            warnings.append(f"activity_{item.get(chr(39) + 'id' + chr(39))}_not_scored")
+            warnings.append(f"activity_{item.get('id')}_not_scored")
     return {"validated_set": {"accepted": accepted, "rejected": rejected, "warnings": warnings}}
 
 
@@ -163,21 +163,26 @@ def human_gate(state: AppraisalGraphState) -> dict:
     # It should be a dict: {"action": "approve"|"reject"|"request_changes",
     #                        "reviewer": <email>, "reason": <str|None>}
     if isinstance(decision, dict):
-        action = decision.get("action", "approve")
-        reviewer = decision.get("reviewer", "unknown")
-        reason = decision.get("reason")
+       action = decision.get("action")
+       reason = decision.get("reason")
     else:
-        # Fallback: accept bare string "approve" / "reject" / "request_changes"
-        action = str(decision)
-        reviewer = "unknown"
-        reason = None
+      action = str(decision)
+      reason = None
+
+    reviewer = None 
 
     status_map = {
-        "approve": "approved",
-        "reject": "rejected",
-        "request_changes": "changes_requested",
-    }
-    approval_status = status_map.get(action, "approved")
+    "approve": "approved",
+    "reject": "rejected",
+    "request_changes": "changes_requested",
+}
+
+    if action not in status_map:
+       raise ValueError(
+        f"Invalid governance action: {action}"
+    )
+
+    approval_status = status_map[action]
 
     return {
         "approval": {
@@ -273,5 +278,5 @@ GRAPH_NODE_NAMES = [
     "api_calculation",
     "report_generation",
     "validation_gate",
-    "human_gate_placeholder",
+    "human_gate",
 ]

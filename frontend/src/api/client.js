@@ -25,7 +25,20 @@ async function request(path, options = {}) {
     const detail = await response.json().catch(() => ({}));
     throw new Error(detail.detail || `Request failed (${response.status})`);
   }
-  return response.json();
+  if (response.status === 204) {
+    return null;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }
 
 export function login(email, password) {
