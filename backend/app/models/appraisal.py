@@ -129,6 +129,23 @@ class AdministrativeActivity(Base):
     activity: Mapped[FacultyActivity] = relationship(back_populates="administrative")
 
 
+class StudentFeedback(Base):
+    __tablename__ = "student_feedback"
+
+    id: Mapped[uuid.UUID] = mapped_column(PortableUUID(), primary_key=True, default=uuid.uuid4)
+    faculty_id: Mapped[uuid.UUID] = mapped_column(
+        PortableUUID(), ForeignKey("faculty_profiles.id"), nullable=False, index=True
+    )
+    cycle_id: Mapped[uuid.UUID | None] = mapped_column(
+        PortableUUID(), ForeignKey("appraisal_cycles.id"), nullable=True, index=True
+    )
+    rating: Mapped[float] = mapped_column(Float, nullable=False)
+    response_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    comments: Mapped[str | None] = mapped_column(String(4000), nullable=True)
+    source: Mapped[str] = mapped_column(String(40), default="institutional", nullable=False)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+
 class Evidence(Base):
     __tablename__ = "evidence"
 

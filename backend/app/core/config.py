@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 
-    database_url: str = "postgresql+psycopg://appraisal:appraisal@localhost:5432/appraisal"
+    database_url: str = "sqlite:///./test.db"
     jwt_secret: str = Field(
         default="change-me-phase1-dev-secret",
         validation_alias=AliasChoices("JWT_SECRET", "JWT_SECRET_KEY"),

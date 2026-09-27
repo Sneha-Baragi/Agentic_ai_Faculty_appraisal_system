@@ -21,6 +21,12 @@ import {
   uploadEvidence,
 } from "../api/client.js";
 
+import { TeachingRequirementSection } from "../components/TeachingRequirementSection.jsx";
+import { TimetableSection } from "../components/TimetableSection.jsx";
+import { AttendanceSection } from "../components/AttendanceSection.jsx";
+import { ResearchPaperRequirementSection } from "../components/ResearchPaperRequirementSection.jsx";
+import { ProjectTeamsSection } from "../components/ProjectTeamsSection.jsx";
+
 const DISCLAIMER = "DEMO/TEST WEIGHTAGES — NOT OFFICIAL UGC";
 
 function SectionHeader({ eyebrow, title, subtitle }) {
@@ -795,8 +801,10 @@ export default function FacultyDashboard() {
         <div className="space-y-4 lg:col-span-2">
           <ProfileSection profile={profile} setProfile={setProfile} />
           <CycleCard cycle={cycle} />
+          <ResearchPaperRequirementSection refresh={activities} />
         </div>
         <div className="space-y-4 lg:col-span-3">
+          <TeachingRequirementSection refresh={activities} />
           <AppraisalSection
             cycleOpen={!!cycle && cycle.status === "open"}
             onRun={async () => {
@@ -811,9 +819,15 @@ export default function FacultyDashboard() {
         </div>
       </div>
 
-      <div className="mt-4"><PlannerSection /></div>
+      <div className="mt-6 space-y-6">
+        <TimetableSection onTimetableChange={refreshAll} />
+        <AttendanceSection onAttendanceMarked={refreshAll} />
+        <ProjectTeamsSection />
+      </div>
 
-      <div className="mt-4">
+      <div className="mt-6"><PlannerSection /></div>
+
+      <div className="mt-6">
         <ActivitiesSection
           cycle={cycle}
           activities={activities}

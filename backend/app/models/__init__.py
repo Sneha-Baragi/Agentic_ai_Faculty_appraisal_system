@@ -9,6 +9,7 @@ from app.models.appraisal import (
     FacultyActivity,
     FacultyAppraisalRun,
     ResearchActivity,
+    StudentFeedback,
     Rubric,
     TeachingActivity,
 )
@@ -16,6 +17,12 @@ from app.models.base import Base
 from app.models.governance import ApprovalDecision, AuditLog
 from app.models.agent import AppraisalPlan
 from app.models.identity import FacultyProfile, Role, User, user_roles
+
+# New models
+from app.models.teaching_requirements import TeachingRequirement
+from app.models.timetable import TimetableEntry
+from app.models.attendance import AttendanceRecord
+from app.models.project_teams import ProjectTeam, ProjectTeamMember
 
 __all__ = [
     "Base",
@@ -29,6 +36,7 @@ __all__ = [
     "ResearchActivity",
     "TeachingActivity",
     "AdministrativeActivity",
+    "StudentFeedback",
     "Evidence",
     "EvidenceValidation",
     "EvidenceExtraction",
@@ -38,4 +46,9 @@ __all__ = [
     "ApprovalDecision",
     "AuditLog",
     "AppraisalPlan",
+    "TeachingRequirement",
+    "TimetableEntry",
+    "AttendanceRecord",
+    "ProjectTeam",
+    "ProjectTeamMember",
 ]

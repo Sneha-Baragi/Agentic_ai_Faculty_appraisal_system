@@ -20,7 +20,7 @@ class ActivityError(ValueError):
     pass
 
 
-def list_activities(db: Session, *, faculty_id, category: str | None = None) -> list[FacultyActivity]:
+def list_activities(db: Session, *, faculty_id, category: str | None = None, cycle_id=None) -> list[FacultyActivity]:
     stmt = (
         select(FacultyActivity)
         .options(
@@ -34,6 +34,8 @@ def list_activities(db: Session, *, faculty_id, category: str | None = None) -> 
     )
     if category:
         stmt = stmt.where(FacultyActivity.category == category)
+    if cycle_id:
+        stmt = stmt.where(FacultyActivity.cycle_id == cycle_id)
     return list(db.scalars(stmt))
 
 

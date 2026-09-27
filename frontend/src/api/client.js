@@ -210,3 +210,71 @@ export function closeAdminCycle(cycleId) {
 export function fetchAdminStatus() {
   return request("/api/v1/admin/status");
 }
+
+export function fetchTeachingRequirement() {
+  return request("/api/v1/teaching-requirements/me");
+}
+
+export function fetchTimetable() {
+  return request("/api/v1/timetable/me");
+}
+
+export function createTimetableEntry(payload) {
+  return request("/api/v1/timetable", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateTimetableEntry(entryId, payload) {
+  return request(`/api/v1/timetable/${entryId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteTimetableEntry(entryId) {
+  return request(`/api/v1/timetable/${entryId}`, {
+    method: "DELETE",
+  });
+}
+
+export function fetchAttendance() {
+  return request("/api/v1/attendance/me");
+}
+
+export function markAttendance(payload) {
+  return request("/api/v1/attendance/mark", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchResearchPaperStatus() {
+  return request("/api/v1/research-papers/me");
+}
+
+export function fetchProjectTeams() {
+  return request("/api/v1/project-teams/me");
+}
+
+export function createProjectTeam(payload) {
+  return request("/api/v1/project-teams", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateProjectTeam(teamId, payload) {
+  return request(`/api/v1/project-teams/${teamId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteProjectTeam(teamId) {
+  return request(`/api/v1/project-teams/${teamId}`, {
+    method: "DELETE",
+  });
+}
+

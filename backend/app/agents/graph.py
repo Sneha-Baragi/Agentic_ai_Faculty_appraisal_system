@@ -1,8 +1,8 @@
 """Phase 2 LangGraph workflow: collectors, evidence gate, DEMO scoring. No LLM.
 
-State field names stay compatible with Phase 1 tests.
-The human_gate node remains a compile-safe placeholder. Later phases must replace
-it with a persisted LangGraph interrupt + checkpointer.
+Phase 5C / Lab 3: Adds checkpointed_graph with MemorySaver and a real
+interrupt()-based human governance gate. The legacy compiled_graph (no
+checkpointer) is retained for backward-compatible unit tests.
 """
 
 from langgraph.graph import END, START, StateGraph
@@ -77,7 +77,7 @@ def evidence_validation(state: AppraisalGraphState) -> dict:
             accepted.append(item)
         else:
             rejected.append({**item, "reason": "missing_or_invalid_evidence"})
-            warnings.append(f"activity_{item.get('id')}_not_scored")
+            warnings.append(f"activity_{item.get(chr(39) + 'id' + chr(39))}_not_scored")
     return {"validated_set": {"accepted": accepted, "rejected": rejected, "warnings": warnings}}
 
 
@@ -122,11 +122,80 @@ def validation_gate(state: AppraisalGraphState) -> dict:
 
 
 def human_gate_placeholder(state: AppraisalGraphState) -> dict:
-    """Compile-safe stand-in for a persisted interrupt/checkpoint human gate."""
+    """Compile-safe stand-in kept for the legacy compiled_graph and existing tests.
+
+    Returns immediately without interrupting. The checkpointed_graph uses the
+    real human_gate node below.
+    """
     return {"approval": None, "next_action": "await_human"}
 
 
+def human_gate(state: AppraisalGraphState) -> dict:
+    """Phase 5C / Lab 3: Real LangGraph human-in-the-loop governance gate.
+
+    Calls interrupt() to pause graph execution and persist state in the
+    InMemorySaver checkpointer. Execution resumes when the reviewer supplies a
+    decision via:
+        checkpointed_graph.invoke(
+            Command(resume={"action": "approve", "reviewer": email}),
+            config={"configurable": {"thread_id": thread_id}},
+        )
+
+    LIMITATION: InMemorySaver is process-memory only. Interrupted threads do
+    not survive server restarts. Use a database-backed checkpointer for
+    production-grade durability.
+    """
+    from langgraph.types import interrupt
+
+    decision = interrupt(
+        {
+            "type": "governance_review",
+            "message": "Appraisal report ready. Awaiting HOD/reviewer governance decision.",
+            "faculty_id": state.get("faculty_id"),
+            "cycle_id": state.get("cycle_id"),
+            "run_id": state.get("run_id"),
+            "score_total": (state.get("score_result") or {}).get("total"),
+            "rating_recommendation": (state.get("report_draft") or {}).get("rating_recommendation"),
+        }
+    )
+
+    # decision is the value passed by the reviewer via Command(resume=...)
+    # It should be a dict: {"action": "approve"|"reject"|"request_changes",
+    #                        "reviewer": <email>, "reason": <str|None>}
+    if isinstance(decision, dict):
+        action = decision.get("action", "approve")
+        reviewer = decision.get("reviewer", "unknown")
+        reason = decision.get("reason")
+    else:
+        # Fallback: accept bare string "approve" / "reject" / "request_changes"
+        action = str(decision)
+        reviewer = "unknown"
+        reason = None
+
+    status_map = {
+        "approve": "approved",
+        "reject": "rejected",
+        "request_changes": "changes_requested",
+    }
+    approval_status = status_map.get(action, "approved")
+
+    return {
+        "approval": {
+            "action": action,
+            "status": approval_status,
+            "reviewer": reviewer,
+            "reason": reason,
+        },
+        "next_action": approval_status,
+    }
+
+
 def build_graph():
+    """Build the legacy non-checkpointed graph (used by compiled_graph).
+
+    Preserves backward compatibility with existing tests that invoke the graph
+    without a thread_id and expect human_gate_placeholder semantics.
+    """
     builder = StateGraph(AppraisalGraphState)
     builder.add_node("aura_prepare", aura_prepare)
     builder.add_node("collect_research", collect_research)
@@ -153,7 +222,48 @@ def build_graph():
     return builder.compile()
 
 
+def build_checkpointed_graph():
+    """Phase 5C / Lab 3: Checkpointed graph with real interrupt-based human gate.
+
+    Returns a compiled StateGraph backed by InMemorySaver. Use this for all
+    real appraisal executions so the governance gate can pause and be resumed.
+    """
+    from langgraph.checkpoint.memory import MemorySaver
+
+    checkpointer = MemorySaver()
+
+    builder = StateGraph(AppraisalGraphState)
+    builder.add_node("aura_prepare", aura_prepare)
+    builder.add_node("collect_research", collect_research)
+    builder.add_node("collect_teaching", collect_teaching)
+    builder.add_node("collect_admin", collect_admin)
+    builder.add_node("evidence_validation", evidence_validation)
+    builder.add_node("api_calculation", api_calculation)
+    builder.add_node("report_generation", report_generation)
+    builder.add_node("validation_gate", validation_gate)
+    builder.add_node("human_gate", human_gate)
+
+    builder.add_edge(START, "aura_prepare")
+    builder.add_edge("aura_prepare", "collect_research")
+    builder.add_edge("aura_prepare", "collect_teaching")
+    builder.add_edge("aura_prepare", "collect_admin")
+    builder.add_edge("collect_research", "evidence_validation")
+    builder.add_edge("collect_teaching", "evidence_validation")
+    builder.add_edge("collect_admin", "evidence_validation")
+    builder.add_edge("evidence_validation", "api_calculation")
+    builder.add_edge("api_calculation", "report_generation")
+    builder.add_edge("report_generation", "validation_gate")
+    builder.add_edge("validation_gate", "human_gate")
+    builder.add_edge("human_gate", END)
+    return builder.compile(checkpointer=checkpointer)
+
+
 compiled_graph = build_graph()
+
+# Phase 5C / Lab 3: Checkpointed graph for real appraisal runs.
+# NOTE: InMemorySaver is process-memory only; see human_gate docstring.
+checkpointed_graph = build_checkpointed_graph()
+
 GRAPH_NODE_NAMES = [
     "aura_prepare",
     "collect_research",

@@ -12,6 +12,10 @@ from app.api.evidence import router as evidence_router
 from app.api.profile import router as profile_router
 from app.api.reports import router as reports_router
 from app.api.review import router as review_router
+from app.api.teaching_requirements import router as teaching_requirements_router
+from app.api.timetable import router as timetable_router
+from app.api.attendance import router as attendance_router
+from app.api.project_teams import router as project_teams_router
 from app.core.config import get_settings
 from app.scoring.engine import ENGINE_VERSION
 
@@ -35,6 +39,10 @@ app.include_router(reports_router)
 app.include_router(review_router)
 app.include_router(admin_router)
 app.include_router(agent_router)
+app.include_router(teaching_requirements_router)
+app.include_router(timetable_router)
+app.include_router(attendance_router)
+app.include_router(project_teams_router)
 
 
 @app.get("/health")
