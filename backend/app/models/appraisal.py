@@ -82,7 +82,7 @@ class FacultyActivity(Base):
     administrative: Mapped["AdministrativeActivity | None"] = relationship(
         back_populates="activity", uselist=False
     )
-    evidence: Mapped[list["Evidence"]] = relationship(back_populates="activity")
+    evidence: Mapped[list["Evidence"]] = relationship(back_populates="activity", cascade="all, delete-orphan")
 
 
 class ResearchActivity(Base):
@@ -170,7 +170,14 @@ class Evidence(Base):
     extraction_status: Mapped[str] = mapped_column(String(40), default="pending", nullable=False)
 
     activity: Mapped["FacultyActivity"] = relationship(back_populates="evidence")
-    extractions: Mapped[list["EvidenceExtraction"]] = relationship(back_populates="evidence")
+    validations: Mapped[list["EvidenceValidation"]] = relationship(
+        back_populates="evidence",
+        cascade="all, delete-orphan",
+    )
+    extractions: Mapped[list["EvidenceExtraction"]] = relationship(
+        back_populates="evidence",
+        cascade="all, delete-orphan",
+    )
 
 
 class EvidenceValidation(Base):
@@ -186,6 +193,8 @@ class EvidenceValidation(Base):
     reasons: Mapped[Any] = mapped_column(JSON, default=list)
     agent_run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+    evidence: Mapped["Evidence"] = relationship(back_populates="validations")
 
 
 class EvidenceExtraction(Base):

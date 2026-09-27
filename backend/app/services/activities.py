@@ -113,6 +113,10 @@ def update_activity(
 
 def delete_activity(db: Session, *, activity: FacultyActivity) -> None:
     for item in list(activity.evidence or []):
+        for validation in list(item.validations or []):
+            db.delete(validation)
+        for extraction in list(item.extractions or []):
+            db.delete(extraction)
         db.delete(item)
     if activity.research is not None:
         db.delete(activity.research)

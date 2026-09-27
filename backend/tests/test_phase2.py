@@ -214,6 +214,44 @@ def test_activity_ownership_patch_delete_blocked(client, db_session: Session):
     assert r.status_code in (403, 404)
 
 
+def test_delete_activity_cleans_evidence_extractions(client, db_session: Session):
+    u = make_user(db_session, "del-act@demo.local", ["faculty"])
+    p = make_faculty_profile(db_session, u)
+    cycle = make_cycle(db_session, status="open")
+    db_session.commit()
+    tok = login(client, "del-act@demo.local")
+
+    create_r = client.post(
+        "/api/v1/activities",
+        headers={**auth_headers(tok), "Content-Type": "application/json"},
+        json={
+            "category": "research",
+            "activity_type": "publications",
+            "title": "Delete me",
+            "description": "Test delete lifecycle",
+            "date": "2026-01-01",
+        },
+    )
+    assert create_r.status_code == 201, create_r.text
+    activity_id = create_r.json()["id"]
+
+    activity = db_session.scalar(select(FacultyActivity).where(FacultyActivity.id == activity_id))
+    assert activity is not None
+    evidence = _attach_valid_evidence(db_session, activity.id, p.id, cycle.id, "delete-evidence")
+    db_session.commit()
+
+    extraction = db_session.scalar(select(EvidenceExtraction).where(EvidenceExtraction.evidence_id == evidence.id))
+    assert extraction is not None
+
+    delete_r = client.delete(f"/api/v1/activities/{activity_id}", headers=auth_headers(tok))
+    assert delete_r.status_code == 204, delete_r.text
+
+    remaining = db_session.scalar(select(EvidenceExtraction).where(EvidenceExtraction.evidence_id == evidence.id))
+    assert remaining is None
+    orphan_rows = db_session.scalar(select(EvidenceExtraction).where(EvidenceExtraction.evidence_id == evidence.id))
+    assert orphan_rows is None
+
+
 # ---- Test 6: Evidence ownership blocked --------------------------------
 def test_evidence_upload_blocked_for_other_faculty(client, db_session: Session):
     uA = make_user(db_session, "evA@demo.local", ["faculty"])
