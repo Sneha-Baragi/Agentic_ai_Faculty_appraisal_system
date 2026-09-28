@@ -45,6 +45,36 @@ def test_hod_approval_is_authorized_idempotent_and_audited(client, db_session: S
     assert db_session.scalar(select(AuditLog).where(AuditLog.entity_id == str(run.id))) is not None
 
 
+def test_review_resume_uses_same_thread_and_action(client, db_session: Session, monkeypatch):
+    profile, hod_user = _make_generated_appraisal(db_session, client, "resume")
+    tok = login(client, hod_user.email)
+    run = db_session.scalar(select(FacultyAppraisalRun).where(FacultyAppraisalRun.faculty_id == profile.id))
+    original_thread = run.graph_thread_id
+    assert original_thread is not None
+
+    captured = {}
+
+    def fake_invoke(command, config=None):
+        captured["command"] = command
+        captured["config"] = config
+        return {"approval": {"action": "approve", "status": "approved"}, "next_action": "approved"}
+
+    import app.api.review as review_module
+
+    monkeypatch.setattr(review_module.checkpointed_graph, "invoke", fake_invoke)
+
+    response = client.post(
+        f"/api/v1/review/faculty/{profile.id}/approve",
+        headers=auth_headers(tok),
+    )
+
+    assert response.status_code == 200
+    assert captured["config"]["configurable"]["thread_id"] == original_thread
+    assert captured["command"].resume["action"] == "approve"
+    assert captured["command"].resume["reason"] is None
+    assert response.json()["status"] == "approved"
+
+
 def test_reject_and_request_changes_require_reason_and_block_invalid_transition(client, db_session: Session):
     profile, hod_user = _make_generated_appraisal(db_session, client, "reject")
     token = login(client, hod_user.email)

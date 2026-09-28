@@ -17,6 +17,7 @@ from app.services.appraisals import latest_report, latest_score
 from app.services.cycles import get_open_cycle
 from app.services.evidence import evidence_to_dict
 from app.services.reports import update_report_approval
+from app.services.runtime import AppraisalRuntime
 
 router = APIRouter(prefix="/api/v1/review", tags=["review"])
 REVIEWER = require_roles("hod", "dean", "iqac", "committee", "admin")
@@ -282,17 +283,6 @@ def _decide(
             detail="A reason is required",
         )
 
-    report = latest_report(
-        db,
-        run_id=run.id,
-    )
-
-    if report is None:
-        raise HTTPException(
-            status_code=409,
-            detail="Appraisal report not found",
-        )
-
     reason = (
         request.reason.strip()
         if request.reason
@@ -305,6 +295,44 @@ def _decide(
         else None
     )
 
+    runtime = AppraisalRuntime()
+    runtime_context = runtime.create_context(
+        faculty_id=str(profile.id),
+        cycle_id=str(cycle.id),
+        run_id=str(run.id),
+        thread_id=run.graph_thread_id,
+        execution_scope={
+            "faculty_id": str(profile.id),
+            "cycle_id": str(cycle.id),
+            "run_id": str(run.id),
+            "allowed_scope": {
+                "faculty_id": str(profile.id),
+                "cycle_id": str(cycle.id),
+                "run_id": str(run.id),
+            },
+        },
+        audit_context={"events": []},
+    )
+
+    runtime.record_approval_required(
+        runtime_context,
+        action=action,
+        reviewer=reviewer.email,
+        reason=reason,
+        state="awaiting_review",
+    )
+
+    report = latest_report(
+        db,
+        run_id=run.id,
+    )
+
+    if report is None:
+        raise HTTPException(
+            status_code=409,
+            detail="Appraisal report not found",
+        )
+
     # ---------------------------------------------------------
     # Phase 5C / Lab 3:
     # Resume the SAME interrupted LangGraph thread.
@@ -315,18 +343,30 @@ def _decide(
     # ---------------------------------------------------------
 
     try:
+        resume_payload = runtime.prepare_resume(
+            runtime_context,
+            action=action,
+            reason=reason,
+            reviewer=reviewer.email,
+            graph_thread_id=run.graph_thread_id,
+        )
         resumed_state = checkpointed_graph.invoke(
             Command(
-                resume={
-                    "action": action,
-                    "reason": reason,
-                }
+                resume=resume_payload,
             ),
             config={
                 "configurable": {
                     "thread_id": run.graph_thread_id,
                 }
             },
+        )
+        runtime.record_resume(
+            runtime_context,
+            action=action,
+            reason=reason,
+            reviewer=reviewer.email,
+            graph_thread_id=run.graph_thread_id,
+            status="completed",
         )
     except Exception as exc:
         db.rollback()

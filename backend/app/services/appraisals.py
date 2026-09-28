@@ -182,6 +182,7 @@ from app.services.cycles import get_or_create_run, get_open_cycle
 from app.services.evidence import evidence_to_dict
 from app.services.memory import retrieve_faculty_memory
 from app.services.reports import build_report
+from app.services.runtime import AppraisalRuntime
 
 
 def load_workflow_payload(db: Session, *, faculty: FacultyProfile) -> dict:
@@ -252,6 +253,26 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
     thread_id = run.graph_thread_id or str(run.id)
     run.graph_thread_id = thread_id
 
+    runtime = AppraisalRuntime()
+    runtime_context = runtime.create_context(
+        faculty_id=str(faculty.id),
+        cycle_id=str(cycle.id),
+        run_id=str(run.id),
+        thread_id=thread_id,
+        execution_scope={
+            "faculty_id": str(faculty.id),
+            "cycle_id": str(cycle.id),
+            "run_id": str(run.id),
+            "allowed_scope": {
+                "faculty_id": str(faculty.id),
+                "cycle_id": str(cycle.id),
+                "run_id": str(run.id),
+            },
+        },
+        memory_context=payload.get("memory_context"),
+        audit_context={"events": []},
+    )
+
     graph_input = {
         "run_id": str(run.id),
         "faculty_id": str(faculty.id),
@@ -265,6 +286,13 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
         "memory_context": payload["memory_context"],
     }
 
+    runtime.record_start(
+        runtime_context,
+        source="run_appraisal",
+        graph_thread_id=thread_id,
+        state={"phase": "graph_start"},
+    )
+
     # Phase 5C / Lab 3:
     # Execute the checkpointed graph with a stable thread ID.
     state = checkpointed_graph.invoke(
@@ -275,6 +303,8 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
             }
         },
     )
+
+    runtime_snapshot = runtime.snapshot(runtime_context, state)
 
     score = state.get("score_result") or {}
     report_draft = state.get("report_draft") or {}
@@ -397,6 +427,7 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
             "awaiting_human": True,
         },
         "report_draft": report_draft,
+        "runtime_snapshot": runtime_snapshot,
     }
 
 

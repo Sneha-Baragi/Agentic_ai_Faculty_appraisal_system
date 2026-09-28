@@ -23,6 +23,7 @@ from app.models import (
 )
 from app.scoring.engine import ENGINE_VERSION, calculate_score, load_demo_rubric
 from app.services.activities import create_activity, activity_to_dict
+from app.services.appraisals import run_appraisal
 from app.services.cycles import get_open_cycle, get_or_create_run
 from app.services.evidence import EvidenceService, evidence_to_dict
 from app.services.extraction import DocumentExtractor
@@ -660,6 +661,40 @@ def test_report_persisted_after_run_appraisal(client, db_session: Session):
 
     run = db_session.execute(select(FacultyAppraisalRun)).scalars().first()
     assert run is not None
+
+
+def test_runtime_snapshot_is_returned_for_run_appraisal(db_session: Session):
+    u = make_user(db_session, "runtime@demo.local", ["faculty"])
+    p = make_faculty_profile(db_session, u)
+    cycle = make_cycle(db_session)
+    a = create_activity(
+        db_session,
+        faculty=p,
+        category="research",
+        activity_type="publications",
+        title="Runtime snapshot",
+        description="",
+        activity_date=date(2026, 1, 1),
+        extras={"venue": "Journal", "year": 2026},
+    )
+    db_session.flush()
+    _attach_valid_evidence(db_session, a.id, p.id, cycle.id, "T16_RUNTIME")
+    db_session.commit()
+
+    result = run_appraisal(db_session, faculty=p)
+
+    assert "runtime_snapshot" in result
+    snapshot = result["runtime_snapshot"]
+
+    assert snapshot["run_id"]
+    assert snapshot["thread_id"]
+    assert snapshot["faculty_id"] == str(p.id)
+    assert snapshot["cycle_id"] == str(cycle.id)
+    assert snapshot["thread_id"] == result["graph"]["thread_id"]
+
+    run = db_session.execute(select(FacultyAppraisalRun)).scalars().first()
+    assert run is not None
+    assert run.graph_thread_id == snapshot["thread_id"]
 
 
 # ---- Test 17: Reviewer read access to packet ---------------------------
