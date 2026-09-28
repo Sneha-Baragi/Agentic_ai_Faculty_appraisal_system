@@ -36,6 +36,35 @@ def build_planner_graph():
 
 planner_graph = build_planner_graph()
 
+# Lab 7: explicit agent-role metadata for the serial appraisal graph.
+# These are role labels only; the underlying functions and behavior remain
+# unchanged so Lab 3/Lab 4/Lab 5/Lab 6 functionality stays intact.
+LAB7_NODE_ROLES = {
+    "aura_prepare": "coordinator/setup",
+    "retrieve_memory": "memory_retrieval",
+    "collect_research": "research_agent",
+    "collect_teaching": "teaching_agent",
+    "collect_admin": "administrative_agent",
+    "evidence_validation": "evidence_validation",
+    "api_calculation": "appraisal_calculation",
+    "report_generation": "report_generation",
+    "validation_gate": "validation_gate",
+    "human_gate": "human_review",
+}
+
+LAB7_NODE_SEQUENCE = [
+    "aura_prepare",
+    "retrieve_memory",
+    "collect_research",
+    "collect_teaching",
+    "collect_admin",
+    "evidence_validation",
+    "api_calculation",
+    "report_generation",
+    "validation_gate",
+    "human_gate",
+]
+
 
 def _all_activities(state: AppraisalGraphState) -> list[dict]:
     return list(state.get("all_activities") or [])
@@ -288,14 +317,4 @@ compiled_graph = build_graph()
 # NOTE: InMemorySaver is process-memory only; see human_gate docstring.
 checkpointed_graph = build_checkpointed_graph()
 
-GRAPH_NODE_NAMES = [
-    "aura_prepare",
-    "collect_research",
-    "collect_teaching",
-    "collect_admin",
-    "evidence_validation",
-    "api_calculation",
-    "report_generation",
-    "validation_gate",
-    "human_gate",
-]
+GRAPH_NODE_NAMES = LAB7_NODE_SEQUENCE
