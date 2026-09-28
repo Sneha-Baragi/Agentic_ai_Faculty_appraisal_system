@@ -180,6 +180,7 @@ from app.scoring.engine import ENGINE_VERSION, load_demo_rubric
 from app.services.activities import activity_to_dict
 from app.services.cycles import get_or_create_run, get_open_cycle
 from app.services.evidence import evidence_to_dict
+from app.services.memory import retrieve_faculty_memory
 from app.services.reports import build_report
 
 
@@ -189,6 +190,11 @@ def load_workflow_payload(db: Session, *, faculty: FacultyProfile) -> dict:
         raise ValueError("No open appraisal cycle")
 
     run = get_or_create_run(db, faculty=faculty, cycle=cycle)
+    memory_context = retrieve_faculty_memory(
+        db,
+        faculty=faculty,
+        current_cycle_id=cycle.id,
+    )
 
     activities = list(
         db.scalars(
@@ -232,6 +238,7 @@ def load_workflow_payload(db: Session, *, faculty: FacultyProfile) -> dict:
         "activities": activity_dicts,
         "evidence": evidence_dicts,
         "profile": profile,
+        "memory_context": memory_context,
     }
 
 
@@ -255,6 +262,7 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
         "errors": [],
         "audit_events": [],
         "all_activities": payload["activities"],
+        "memory_context": payload["memory_context"],
     }
 
     # Phase 5C / Lab 3:

@@ -8,6 +8,7 @@ class AppraisalGraphState(TypedDict, total=False):
     rubric_id: str
     attempt: int
     max_attempts: int
+    memory_context: dict[str, Any] | None
     all_activities: list[dict[str, Any]]
     raw_research: list[dict[str, Any]]
     raw_teaching: list[dict[str, Any]]

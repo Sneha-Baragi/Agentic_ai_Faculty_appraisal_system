@@ -26,6 +26,7 @@ from app.services.activities import create_activity, activity_to_dict
 from app.services.cycles import get_open_cycle, get_or_create_run
 from app.services.evidence import EvidenceService, evidence_to_dict
 from app.services.extraction import DocumentExtractor
+from app.services.memory import retrieve_faculty_memory
 from app.services.storage import get_storage, object_key_for
 from app.services.scoring_map import to_score_inputs
 from sqlalchemy import select
@@ -86,6 +87,86 @@ def _attach_valid_evidence(db: Session, act_id, fac_id, cycle_id, key: str):
         )
     )
     return ev
+
+
+def test_retrieve_faculty_memory_excludes_current_cycle(db_session: Session):
+    user = make_user(db_session, "memory@demo.local", ["faculty"])
+    faculty = make_faculty_profile(db_session, user, employee_code="MEM-001")
+    old_cycle = make_cycle(db_session, status="closed")
+    current_cycle = make_cycle(db_session, status="open")
+    db_session.commit()
+
+    rubric = Rubric(
+        name="Demo Rubric",
+        version="2026",
+        is_demo=True,
+        json_definition={"criteria": []},
+    )
+    old_run = FacultyAppraisalRun(faculty_id=faculty.id, cycle_id=old_cycle.id, status="completed")
+    current_run = FacultyAppraisalRun(faculty_id=faculty.id, cycle_id=current_cycle.id, status="collecting")
+    db_session.add_all([rubric, old_run, current_run])
+    db_session.flush()
+
+    old_score = AppraisalScore(
+        faculty_id=faculty.id,
+        cycle_id=old_cycle.id,
+        run_id=old_run.id,
+        rubric_id=rubric.id,
+        total=82.5,
+        breakdown={"research_score": 40.0, "teaching_score": 20.0, "administrative_score": 22.5},
+        activity_score_refs=[],
+        engine_version="demo-memory",
+    )
+    current_score = AppraisalScore(
+        faculty_id=faculty.id,
+        cycle_id=current_cycle.id,
+        run_id=current_run.id,
+        rubric_id=rubric.id,
+        total=91.0,
+        breakdown={"research_score": 45.0, "teaching_score": 24.0, "administrative_score": 22.0},
+        activity_score_refs=[],
+        engine_version="demo-memory",
+    )
+    db_session.add_all([old_score, current_score])
+    db_session.flush()
+
+    old_report = AppraisalReport(
+        run_id=old_run.id,
+        version_number=1,
+        score_id=old_score.id,
+        summary_md="## Old report",
+        rating_recommendation="A",
+        status="generated",
+        content_hash="old-hash",
+        report_json={"summary": "old"},
+    )
+    current_report = AppraisalReport(
+        run_id=current_run.id,
+        version_number=1,
+        score_id=current_score.id,
+        summary_md="## Current report",
+        rating_recommendation="A+",
+        status="generated",
+        content_hash="current-hash",
+        report_json={"summary": "current"},
+    )
+    db_session.add_all([old_report, current_report])
+    db_session.commit()
+
+    result = retrieve_faculty_memory(
+        db_session,
+        faculty=faculty,
+        current_cycle_id=current_cycle.id,
+    )
+
+    assert result["faculty_profile"]["id"] == str(faculty.id)
+    previous_score_ids = {item["id"] for item in result["previous_scores"]}
+    assert str(old_score.id) in previous_score_ids
+    assert str(current_score.id) not in previous_score_ids
+
+    previous_report_ids = {item["id"] for item in result["previous_reports"]}
+    assert str(old_report.id) in previous_report_ids
+    assert str(current_report.id) not in previous_report_ids
 
 
 # ---- Test 1: Login + /me works ------------------------------------------

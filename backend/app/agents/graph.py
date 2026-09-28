@@ -51,6 +51,21 @@ def aura_prepare(state: AppraisalGraphState) -> dict:
     }
 
 
+def retrieve_memory(state: AppraisalGraphState) -> dict:
+    memory_context = state.get("memory_context") or {}
+    existing_events = list(state.get("audit_events") or [])
+    return {
+        "audit_events": existing_events
+        + [
+            {
+                "event": "history_retrieved",
+                "phase": 2,
+                "memory_context": memory_context,
+            }
+        ]
+    }
+
+
 def collect_research(state: AppraisalGraphState) -> dict:
     return {"raw_research": [a for a in _all_activities(state) if a.get("category") == "research"]}
 
@@ -203,6 +218,7 @@ def build_graph():
     """
     builder = StateGraph(AppraisalGraphState)
     builder.add_node("aura_prepare", aura_prepare)
+    builder.add_node("retrieve_memory", retrieve_memory)
     builder.add_node("collect_research", collect_research)
     builder.add_node("collect_teaching", collect_teaching)
     builder.add_node("collect_admin", collect_admin)
@@ -213,9 +229,10 @@ def build_graph():
     builder.add_node("human_gate_placeholder", human_gate_placeholder)
 
     builder.add_edge(START, "aura_prepare")
-    builder.add_edge("aura_prepare", "collect_research")
-    builder.add_edge("aura_prepare", "collect_teaching")
-    builder.add_edge("aura_prepare", "collect_admin")
+    builder.add_edge("aura_prepare", "retrieve_memory")
+    builder.add_edge("retrieve_memory", "collect_research")
+    builder.add_edge("retrieve_memory", "collect_teaching")
+    builder.add_edge("retrieve_memory", "collect_admin")
     builder.add_edge("collect_research", "evidence_validation")
     builder.add_edge("collect_teaching", "evidence_validation")
     builder.add_edge("collect_admin", "evidence_validation")
@@ -239,6 +256,7 @@ def build_checkpointed_graph():
 
     builder = StateGraph(AppraisalGraphState)
     builder.add_node("aura_prepare", aura_prepare)
+    builder.add_node("retrieve_memory", retrieve_memory)
     builder.add_node("collect_research", collect_research)
     builder.add_node("collect_teaching", collect_teaching)
     builder.add_node("collect_admin", collect_admin)
@@ -249,9 +267,10 @@ def build_checkpointed_graph():
     builder.add_node("human_gate", human_gate)
 
     builder.add_edge(START, "aura_prepare")
-    builder.add_edge("aura_prepare", "collect_research")
-    builder.add_edge("aura_prepare", "collect_teaching")
-    builder.add_edge("aura_prepare", "collect_admin")
+    builder.add_edge("aura_prepare", "retrieve_memory")
+    builder.add_edge("retrieve_memory", "collect_research")
+    builder.add_edge("retrieve_memory", "collect_teaching")
+    builder.add_edge("retrieve_memory", "collect_admin")
     builder.add_edge("collect_research", "evidence_validation")
     builder.add_edge("collect_teaching", "evidence_validation")
     builder.add_edge("collect_admin", "evidence_validation")
