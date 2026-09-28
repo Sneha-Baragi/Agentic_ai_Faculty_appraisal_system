@@ -52,6 +52,9 @@ LAB7_NODE_ROLES = {
     "human_gate": "human_review",
 }
 
+# The collection stage is intentionally a fan-out group after memory retrieval.
+# This uses the native LangGraph conditional edge mechanism for a graph-level
+# fan-out and then converges at evidence_validation.
 LAB7_NODE_SEQUENCE = [
     "aura_prepare",
     "retrieve_memory",
@@ -64,6 +67,12 @@ LAB7_NODE_SEQUENCE = [
     "validation_gate",
     "human_gate",
 ]
+
+PARALLEL_COLLECTION_NODES = ["collect_research", "collect_teaching", "collect_admin"]
+
+
+def parallel_collection_router(state: AppraisalGraphState):
+    return PARALLEL_COLLECTION_NODES
 
 
 def _all_activities(state: AppraisalGraphState) -> list[dict]:
@@ -259,9 +268,10 @@ def build_graph():
 
     builder.add_edge(START, "aura_prepare")
     builder.add_edge("aura_prepare", "retrieve_memory")
-    builder.add_edge("retrieve_memory", "collect_research")
-    builder.add_edge("retrieve_memory", "collect_teaching")
-    builder.add_edge("retrieve_memory", "collect_admin")
+    builder.add_conditional_edges(
+        "retrieve_memory",
+        parallel_collection_router,
+    )
     builder.add_edge("collect_research", "evidence_validation")
     builder.add_edge("collect_teaching", "evidence_validation")
     builder.add_edge("collect_admin", "evidence_validation")
@@ -297,9 +307,10 @@ def build_checkpointed_graph():
 
     builder.add_edge(START, "aura_prepare")
     builder.add_edge("aura_prepare", "retrieve_memory")
-    builder.add_edge("retrieve_memory", "collect_research")
-    builder.add_edge("retrieve_memory", "collect_teaching")
-    builder.add_edge("retrieve_memory", "collect_admin")
+    builder.add_conditional_edges(
+        "retrieve_memory",
+        parallel_collection_router,
+    )
     builder.add_edge("collect_research", "evidence_validation")
     builder.add_edge("collect_teaching", "evidence_validation")
     builder.add_edge("collect_admin", "evidence_validation")

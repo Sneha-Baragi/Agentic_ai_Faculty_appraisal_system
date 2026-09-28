@@ -2,7 +2,9 @@ from app.agents.graph import (
     GRAPH_NODE_NAMES,
     LAB7_NODE_ROLES,
     LAB7_NODE_SEQUENCE,
+    PARALLEL_COLLECTION_NODES,
     build_graph,
+    parallel_collection_router,
 )
 from app.scoring.engine import ENGINE_VERSION
 
@@ -44,6 +46,15 @@ def test_graph_has_parallel_collector_nodes() -> None:
     assert "collect_research" in GRAPH_NODE_NAMES
     assert "collect_teaching" in GRAPH_NODE_NAMES
     assert "collect_admin" in GRAPH_NODE_NAMES
+
+
+def test_graph_uses_native_langgraph_fan_out_for_parallel_collection() -> None:
+    assert parallel_collection_router({}) == PARALLEL_COLLECTION_NODES
+    assert PARALLEL_COLLECTION_NODES == [
+        "collect_research",
+        "collect_teaching",
+        "collect_admin",
+    ]
 
 
 def test_graph_exposes_lab7_roles_and_serial_sequence() -> None:
@@ -91,6 +102,34 @@ def test_graph_sequence_keeps_memory_before_collection_and_human_gate_last() -> 
     assert memory_index < admin_index < evidence_index
     assert evidence_index < api_index < report_index < human_index
     assert LAB7_NODE_SEQUENCE[-1] == "human_gate"
+
+
+def test_graph_parallel_collection_converges_before_evidence_validation() -> None:
+    graph = build_graph()
+    result = graph.invoke(
+        {
+            "run_id": "r1",
+            "faculty_id": "f1",
+            "cycle_id": "c1",
+            "rubric_id": "DEMO_RUBRIC_v1",
+            "attempt": 0,
+            "max_attempts": 3,
+            "errors": [],
+            "audit_events": [],
+            "all_activities": [
+                {"id": 1, "category": "research", "evidence_ids": [11], "evidence_statuses": ["valid"]},
+                {"id": 2, "category": "teaching", "evidence_ids": [22], "evidence_statuses": ["valid"]},
+                {"id": 3, "category": "administrative", "evidence_ids": [33], "evidence_statuses": ["valid"]},
+            ],
+        }
+    )
+
+    assert result["raw_research"][0]["id"] == 1
+    assert result["raw_teaching"][0]["id"] == 2
+    assert result["raw_admin"][0]["id"] == 3
+    accepted_ids = {item["id"] for item in result["validated_set"]["accepted"]}
+    assert accepted_ids == {1, 2, 3}
+    assert result["validation_result"]["ok"] is True
 
 
 def test_graph_includes_history_retrieval_and_keeps_memory_context() -> None:
