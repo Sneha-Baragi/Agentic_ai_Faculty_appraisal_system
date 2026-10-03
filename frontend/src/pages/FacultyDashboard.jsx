@@ -24,7 +24,6 @@ import {
 import { TeachingRequirementSection } from "../components/TeachingRequirementSection.jsx";
 import { TimetableSection } from "../components/TimetableSection.jsx";
 import { AttendanceSection } from "../components/AttendanceSection.jsx";
-import { ResearchPaperRequirementSection } from "../components/ResearchPaperRequirementSection.jsx";
 import { ProjectTeamsSection } from "../components/ProjectTeamsSection.jsx";
 
 const DISCLAIMER = "DEMO/TEST WEIGHTAGES — NOT OFFICIAL UGC";
@@ -801,7 +800,6 @@ export default function FacultyDashboard() {
         <div className="space-y-4 lg:col-span-2">
           <ProfileSection profile={profile} setProfile={setProfile} />
           <CycleCard cycle={cycle} />
-          <ResearchPaperRequirementSection refresh={activities} />
         </div>
         <div className="space-y-4 lg:col-span-3">
           <TeachingRequirementSection refresh={activities} />
