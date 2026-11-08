@@ -4,4 +4,3 @@
 # This lab is implemented entirely using Python's standard library.
 # No external third-party dependencies are required.
 # Python 3.10+ recommended.
-

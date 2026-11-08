@@ -5,4 +5,3 @@
   "authors": "Edge Systems Architecture Lab",
   "content": "Migrating to a serverless edge architecture is projected to cut cloud infrastructure hosting costs by 45%. However, no billing records, server logs, or financial audits were provided to substantiate this projection. In contrast, the newly introduced distributed in-memory cache achieved a 78% reduction in p99 database query latency across 1,000,000 synthetic benchmark transactions executed over seven days. The latency benchmarking was conducted entirely on a local development cluster and did not include wide-area network latency."
 }
-

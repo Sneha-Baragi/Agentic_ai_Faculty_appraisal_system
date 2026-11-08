@@ -112,4 +112,3 @@ SKILL_SPEC: Dict[str, Any] = {
     ],
     "fallback_placeholder": FALLBACK_NOT_STATED,
 }
-
