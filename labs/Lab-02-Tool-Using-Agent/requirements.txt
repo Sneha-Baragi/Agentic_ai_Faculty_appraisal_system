@@ -1,0 +1,7 @@
+# Lab 2 – Tool-Using Agent
+# No external dependencies required.
+# All functionality uses Python standard library only.
+#
+# Optional (for linting / type checking only – not needed to run):
+# mypy>=1.0
+

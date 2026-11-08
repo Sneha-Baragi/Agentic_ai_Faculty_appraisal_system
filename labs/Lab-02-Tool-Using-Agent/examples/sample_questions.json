@@ -1,0 +1,76 @@
+{
+  "reference_questions": [
+    {
+      "id": "Q1",
+      "label": "Event Sign-Up Total and Average",
+      "question": "How many students signed up across all events in the dataset, and what's the average per event?",
+      "expected_tools": ["read_csv", "calculator", "calculator"],
+      "expected_tool_chain": "read_csv → extract values → calculator(sum) → calculator(average)",
+      "expected_answer_contains": {
+        "total": 74,
+        "average": 12.33,
+        "event_count": 6
+      },
+      "notes": "Totals and averages must come from tool results, never hardcoded."
+    },
+    {
+      "id": "Q2",
+      "label": "Hackathon Kickoff Event Information",
+      "question": "Where and when is the Hackathon Kickoff?",
+      "expected_tools": ["get_event_info"],
+      "expected_tool_chain": "get_event_info → retrieve metadata → construct answer",
+      "expected_answer_contains": {
+        "event": "Hackathon Kickoff",
+        "location": "Innovation Lab",
+        "date": "2026-07-05"
+      },
+      "notes": "Only the events API is called; the CSV is not needed."
+    },
+    {
+      "id": "Q3",
+      "label": "Capstone Expo – Missing Metadata",
+      "question": "Where and when is the Capstone Expo?",
+      "expected_tools": ["get_event_info"],
+      "expected_tool_chain": "get_event_info → no_metadata response → honest reply",
+      "expected_answer_contains": {
+        "event": "Capstone Expo",
+        "status": "no_metadata"
+      },
+      "notes": "The agent must NOT fabricate date or location. Graceful handling required."
+    }
+  ],
+  "assignment_questions": [
+    {
+      "id": "A1",
+      "label": "Assignment 1 – Low Turnout Notification",
+      "question": "How many students signed up across all events in the dataset, and what's the average per event?",
+      "condition": "Only called when average < LOW_TURNOUT_THRESHOLD (10).",
+      "expected_tools": ["read_csv", "calculator", "calculator", "send_notification"],
+      "expected_tool_chain": "read_csv → calculator(sum) → calculator(average) → send_notification (if below threshold)",
+      "notes": "send_notification only drafts; nothing is actually sent."
+    },
+    {
+      "id": "A2",
+      "label": "Assignment 2 – Category-Filtered Average",
+      "question": "What's the average sign-up for technical events only?",
+      "expected_tools": ["read_csv", "calculator"],
+      "expected_tool_chain": "read_csv → filter by Category=='technical' → validate non-empty → calculator(average)",
+      "expected_answer_contains": {
+        "category": "technical",
+        "technical_events": ["AI Club Talk", "Hackathon Kickoff", "Robotics Demo"],
+        "technical_signups": [12, 9, 15],
+        "average": 12.0
+      },
+      "notes": "Filter must happen in Python after CSV read; calculator must receive filtered values only."
+    }
+  ],
+  "no_tool_questions": [
+    {
+      "id": "NT1",
+      "question": "Hello, what can you help me with?",
+      "expected_tools": [],
+      "notes": "Greeting requires no tool call."
+    }
+  ]
+}
+
