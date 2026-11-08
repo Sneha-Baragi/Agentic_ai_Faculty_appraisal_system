@@ -1,0 +1,14 @@
+# Lab 1: Agent vs Chatbot (Study Planner)
+# Course: Agentic AI (26ECAC401)
+#
+# This lab is implemented entirely using Python's standard library modules:
+# - dataclasses
+# - json
+# - typing
+# - unittest
+# - argparse
+# - sys, os, re
+#
+# No external third-party packages or LLM API keys are required.
+# Python 3.10+ is recommended.
+

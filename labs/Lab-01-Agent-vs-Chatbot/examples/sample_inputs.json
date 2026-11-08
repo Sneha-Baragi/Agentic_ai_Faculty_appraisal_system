@@ -1,0 +1,114 @@
+{
+  "default_scenario": {
+    "description": "Standard study planner demonstration from Lab Guide",
+    "initial_request": {
+      "student_name": "Aarav Sharma",
+      "subjects": [
+        "Data Structures",
+        "Operating Systems",
+        "AI Agents"
+      ],
+      "hours_per_day": 2
+    },
+    "clarification_response": {
+      "unavailable_days": [
+        "Sunday"
+      ]
+    },
+    "feedback_round_1": "Move Tuesday's session to the evening.",
+    "feedback_round_2": "Swap Thursday and Saturday subjects so AI Agents is studied on Saturday."
+  },
+  "assignment_2_uncovered_conflict": {
+    "description": "Lab Guide pages 8-9: Student marks Sunday unavailable, schedule tool returns Wednesday & Friday as busy; Friday is not marked unavailable initially and is detected as uncovered conflict",
+    "initial_request": {
+      "student_name": "Kavya Menon",
+      "subjects": [
+        "Data Structures",
+        "Operating Systems",
+        "AI Agents"
+      ],
+      "hours_per_day": 2,
+      "unavailable_days": [
+        "Sunday"
+      ]
+    },
+    "schedule_tool_response": {
+      "busy_days": [
+        "Wednesday",
+        "Friday"
+      ],
+      "commitments": {
+        "Wednesday": "Department Seminar & Hardware Lab (09:00 - 17:00)",
+        "Friday": "Campus Project Mentorship & Lab Practicals (10:00 - 16:00)"
+      }
+    },
+    "expected_uncovered_conflicts": [
+      "Wednesday",
+      "Friday"
+    ],
+    "expected_friday_status": "BUSY_CONFLICT"
+  },
+  "minimal_request": {
+    "description": "Incomplete request with missing hours and unavailable days",
+    "initial_request": {
+      "student_name": "Bhavna Patel",
+      "subjects": [
+        "Database Systems",
+        "Computer Networks"
+      ]
+    },
+    "clarifications_needed": [
+      "hours_per_day",
+      "unavailable_days"
+    ]
+  },
+  "conflicting_scenario_impossible": {
+    "description": "Student marks all 7 days as unavailable",
+    "initial_request": {
+      "student_name": "Chetan Kumar",
+      "subjects": [
+        "Machine Learning"
+      ],
+      "hours_per_day": 3,
+      "unavailable_days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    }
+  },
+  "conflicting_scenario_schedule_clash": {
+    "description": "Student insists on studying only on Wednesday, which is an institutional busy day",
+    "initial_request": {
+      "student_name": "Divya Rao",
+      "subjects": [
+        "Cyber Security"
+      ],
+      "hours_per_day": 4,
+      "unavailable_days": [
+        "Monday",
+        "Tuesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    }
+  },
+  "existing_schedule_mock": {
+    "student_id": "student_01",
+    "busy_days": [
+      "Wednesday",
+      "Friday"
+    ],
+    "busy_slots": {
+      "Wednesday": "Department Seminar & Hardware Lab (09:00 - 17:00)",
+      "Friday": "Campus Project Mentorship & Lab Practicals (10:00 - 16:00)"
+    }
+  }
+}
+
