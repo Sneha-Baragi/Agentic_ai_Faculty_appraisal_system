@@ -1,8 +1,11 @@
 import os
 import sys
+import hashlib
+import json
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 from docx import Document
 from openpyxl import Workbook
 from reportlab.pdfgen import canvas
@@ -21,6 +24,7 @@ from app.models import (
     Rubric,
     User,
 )
+from app.schemas.appraisal import ResearchMetricsInput
 from app.scoring.engine import ENGINE_VERSION, calculate_score, load_demo_rubric
 from app.services.activities import create_activity, activity_to_dict
 from app.services.appraisals import run_appraisal
@@ -225,6 +229,52 @@ def test_profile_patch_restricts_editable_fields(client, db_session: Session):
     assert body["full_name"] == "New Name"
     assert body["department"] == "Physics"
     assert body.get("employee_code") != "HACKED"
+
+
+def test_profile_scholar_identity_update_read_and_ownership(client, db_session: Session):
+    faculty_a = make_user(db_session, "scholar-a@demo.local", ["faculty"])
+    make_faculty_profile(db_session, faculty_a, employee_code="SCHOLAR-A")
+    faculty_b = make_user(db_session, "scholar-b@demo.local", ["faculty"])
+    make_faculty_profile(db_session, faculty_b, employee_code="SCHOLAR-B")
+    db_session.commit()
+
+    token_a = login(client, faculty_a.email)
+    token_b = login(client, faculty_b.email)
+    profile_url = "https://scholar.google.com/citations?user=ExampleScholarID"
+    updated = client.patch(
+        "/api/v1/profile/me",
+        headers=auth_headers(token_a),
+        json={
+            "google_scholar_id": "ExampleScholarID",
+            "google_scholar_url": profile_url,
+        },
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["google_scholar_id"] == "ExampleScholarID"
+    assert updated.json()["google_scholar_url"] == profile_url
+
+    own_profile = client.get("/api/v1/profile/me", headers=auth_headers(token_a))
+    assert own_profile.json()["google_scholar_id"] == "ExampleScholarID"
+    assert own_profile.json()["google_scholar_url"] == profile_url
+
+    other_profile = client.get("/api/v1/profile/me", headers=auth_headers(token_b))
+    assert other_profile.status_code == 200
+    assert other_profile.json()["google_scholar_id"] is None
+    assert other_profile.json()["google_scholar_url"] is None
+
+
+def test_profile_rejects_invalid_google_scholar_url(client, db_session: Session):
+    user = make_user(db_session, "scholar-invalid-url@demo.local", ["faculty"])
+    make_faculty_profile(db_session, user)
+    db_session.commit()
+    token = login(client, user.email)
+
+    response = client.patch(
+        "/api/v1/profile/me",
+        headers=auth_headers(token),
+        json={"google_scholar_url": "not a URL"},
+    )
+    assert response.status_code == 422
 
 
 # ---- Test 4: Activity CRUD ---------------------------------------------
@@ -661,6 +711,77 @@ def test_report_persisted_after_run_appraisal(client, db_session: Session):
 
     run = db_session.execute(select(FacultyAppraisalRun)).scalars().first()
     assert run is not None
+    assert report.report_json["research_metrics"]["status"] == "unavailable"
+    assert report.report_json["research_metrics"]["error_category"] == "missing_scholar_id"
+    assert report.report_json["research_metrics"]["human_review_required"] is True
+    assert "require human review" in report.summary_md
+
+
+def test_legacy_manual_metrics_are_not_used_without_scholar_retrieval(client, db_session: Session):
+    user = make_user(db_session, "metrics@demo.local", ["faculty"])
+    profile = make_faculty_profile(db_session, user)
+    profile.google_scholar_url = "https://scholar.google.com/citations?user=ExistingProfile"
+    cycle = make_cycle(db_session)
+    activity = create_activity(
+        db_session,
+        faculty=profile,
+        category="research",
+        activity_type="publications",
+        title="Metrics report paper",
+        description="",
+        activity_date=date(2026, 1, 1),
+        extras={"venue": "Journal", "year": 2026},
+    )
+    db_session.flush()
+    _attach_valid_evidence(db_session, activity.id, profile.id, cycle.id, "METRICS_REPORT")
+    db_session.commit()
+
+    token = login(client, user.email)
+    response = client.post(
+        "/api/v1/appraisals/run",
+        headers=auth_headers(token),
+        json={
+            "research_metrics": {
+                "h_index": 12,
+                "i10_index": 18,
+                "total_citations": 420,
+                "papers_this_year": 3,
+                "source": "google_scholar",
+                "captured_at": "2026-10-02T12:34:56+00:00",
+            }
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    report = db_session.scalar(select(AppraisalReport))
+    assert report is not None
+    snapshot = report.report_json["research_metrics"]
+    assert snapshot["status"] == "unavailable"
+    assert snapshot["error_category"] == "missing_scholar_id"
+    assert snapshot["human_review_required"] is True
+    assert "h_index" not in snapshot
+    assert snapshot["attempted_at"].endswith("Z")
+    assert report.version_number == 1
+    assert report.content_hash == hashlib.sha256(
+        json.dumps(report.report_json, sort_keys=True).encode()
+    ).hexdigest()
+    run = db_session.get(FacultyAppraisalRun, report.run_id)
+    assert run is not None
+    assert run.current_version_id == report.id
+
+
+@pytest.mark.parametrize("field", ["h_index", "i10_index", "total_citations", "papers_this_year"])
+def test_research_metrics_reject_negative_values(field: str):
+    with pytest.raises(ValidationError):
+        ResearchMetricsInput(**{field: -1, "source": "google_scholar"})
+
+
+def test_research_metrics_reject_non_utc_capture_time():
+    with pytest.raises(ValidationError):
+        ResearchMetricsInput(
+            source="google_scholar",
+            captured_at="2026-10-02T12:34:56+02:00",
+        )
 
 
 def test_runtime_snapshot_is_returned_for_run_appraisal(db_session: Session):

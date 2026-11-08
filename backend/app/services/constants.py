@@ -7,6 +7,50 @@ ALLOWED_MIME_PREFIXES = {
     "image/jpeg",
 }
 
+# Supported MIME aliases mapped by declared file extension
+ALLOWED_MIME_BY_EXT: dict[str, set[str]] = {
+    ".pdf": {"application/pdf", "application/x-pdf", "application/octet-stream"},
+    ".docx": {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword",
+        "application/zip",
+        "application/x-zip-compressed",
+        "application/octet-stream",
+    },
+    ".xlsx": {
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+        "application/zip",
+        "application/x-zip-compressed",
+        "application/octet-stream",
+    },
+    ".png": {"image/png", "image/x-png", "application/octet-stream"},
+    ".jpg": {"image/jpeg", "image/jpg", "image/pjpeg", "application/octet-stream"},
+    ".jpeg": {"image/jpeg", "image/jpg", "image/pjpeg", "application/octet-stream"},
+}
+
+DISALLOWED_MIME_TYPES = {
+    "text/html",
+    "text/javascript",
+    "application/javascript",
+    "application/x-javascript",
+    "application/x-executable",
+    "application/x-msdownload",
+    "application/x-dosexec",
+    "application/exe",
+    "application/x-sh",
+    "application/x-bat",
+}
+
+# Parser and Decompression Security Limits (SEC-05)
+MAX_PDF_PAGES: int = 50
+MAX_EXTRACTED_CHARS: int = 50_000
+MAX_ZIP_UNCOMPRESSED_BYTES: int = 30 * 1024 * 1024  # 30 MiB
+MAX_ZIP_RATIO: float = 100.0
+MAX_ZIP_MEMBERS: int = 150
+MAX_XLSX_SHEETS: int = 5
+MAX_XLSX_ROWS_PER_SHEET: int = 2_000
+
 ACTIVITY_TYPES = {
     "research": ["publications", "patents", "research_projects", "conferences", "grants"],
     "teaching": ["courses_taught", "lectures", "laboratory_sessions", "student_projects", "mentoring"],

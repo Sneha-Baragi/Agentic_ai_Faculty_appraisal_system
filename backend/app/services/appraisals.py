@@ -169,20 +169,25 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.agents.graph import checkpointed_graph
+from app.core.config import get_settings
 from app.models import (
     AppraisalReport,
     AppraisalScore,
     FacultyActivity,
     FacultyProfile,
     Rubric,
+    AuditLog,
 )
 from app.scoring.engine import ENGINE_VERSION, load_demo_rubric
 from app.services.activities import activity_to_dict
 from app.services.cycles import get_or_create_run, get_open_cycle
 from app.services.evidence import evidence_to_dict
+from app.services.deep_research import run_deep_research_verification
+from app.services.google_scholar import GoogleScholarError, GoogleScholarService
 from app.services.memory import retrieve_faculty_memory
 from app.services.reports import build_report
 from app.services.runtime import AppraisalRuntime
+from app.services.student_feedback import get_student_feedback_record
 
 
 def load_workflow_payload(db: Session, *, faculty: FacultyProfile) -> dict:
@@ -243,11 +248,74 @@ def load_workflow_payload(db: Session, *, faculty: FacultyProfile) -> dict:
     }
 
 
-def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
+def run_appraisal(
+    db: Session,
+    *,
+    faculty: FacultyProfile,
+) -> dict:
     payload = load_workflow_payload(db, faculty=faculty)
 
     run = payload["run"]
     cycle = payload["cycle"]
+    retrieved_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    research_metrics: dict = {
+        "status": "unavailable",
+        "provider": "serpapi_google_scholar_author",
+        "scholar_id": faculty.google_scholar_id,
+        "scholar_url": faculty.google_scholar_url,
+        "attempted_at": retrieved_at,
+        "metrics": None,
+        "publications": [],
+        "error_category": "missing_scholar_id",
+        "human_review_required": True,
+    }
+    if faculty.google_scholar_id:
+        try:
+            scholar_data = GoogleScholarService(get_settings().serpapi_api_key).fetch_profile(
+                faculty.google_scholar_id,
+                scholar_url=faculty.google_scholar_url,
+            )
+            research_metrics = {
+                "status": "retrieved",
+                "provider": scholar_data["source"],
+                "scholar_id": scholar_data["scholar_id"],
+                "scholar_url": scholar_data["scholar_url"],
+                "scholar_name": scholar_data["scholar_name"],
+                "retrieved_at": scholar_data["retrieved_at"],
+                "metrics": {
+                    "total_citations": scholar_data["total_citations"],
+                    "citations_since_2016": scholar_data["citations_since_2016"],
+                    "h_index": scholar_data["h_index"],
+                    "h_index_since_2016": scholar_data["h_index_since_2016"],
+                    "i10_index": scholar_data["i10_index"],
+                    "i10_index_since_2016": scholar_data["i10_index_since_2016"],
+                },
+                "publications": scholar_data["publications"],
+                "human_review_required": False,
+            }
+        except GoogleScholarError as exc:
+            research_metrics["error_category"] = exc.category
+    db.add(
+        AuditLog(
+            actor_id=faculty.user_id,
+            action=(
+                "appraisal_research_metrics_success"
+                if research_metrics["status"] == "retrieved"
+                else "appraisal_research_metrics_failure"
+            ),
+            entity_type="faculty_profile",
+            entity_id=str(faculty.id),
+            before=None,
+            after={
+                "success": research_metrics["status"] == "retrieved",
+                "provider": research_metrics["provider"],
+                "scholar_id": faculty.google_scholar_id,
+                "retrieved_at": research_metrics.get("retrieved_at")
+                or research_metrics["attempted_at"],
+                "error_category": research_metrics.get("error_category"),
+            },
+        )
+    )
 
     # Use a stable LangGraph thread ID for this appraisal run.
     thread_id = run.graph_thread_id or str(run.id)
@@ -273,9 +341,33 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
         audit_context={"events": []},
     )
 
+    feedback_data = get_student_feedback_record(faculty.full_name)
+    db.add(
+        AuditLog(
+            actor_id=faculty.user_id,
+            action=(
+                "appraisal_student_feedback_matched"
+                if feedback_data and feedback_data.get("status") == "matched"
+                else "appraisal_student_feedback_unmatched"
+            ),
+            entity_type="faculty_profile",
+            entity_id=str(faculty.id),
+            before=None,
+            after={
+                "faculty_name": faculty.full_name,
+                "status": feedback_data.get("status") if feedback_data else "missing",
+                "feedback_percentage": (
+                    feedback_data.get("feedback_percentage") if feedback_data else None
+                ),
+                "source_file": feedback_data.get("source_file") if feedback_data else None,
+            },
+        )
+    )
+
     graph_input = {
         "run_id": str(run.id),
         "faculty_id": str(faculty.id),
+        "faculty_name": faculty.full_name,
         "cycle_id": str(cycle.id),
         "rubric_id": "DEMO_RUBRIC_v1",
         "attempt": run.attempt_count,
@@ -284,6 +376,12 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
         "audit_events": [],
         "all_activities": payload["activities"],
         "memory_context": payload["memory_context"],
+        "research_metrics_status": research_metrics["status"],
+        "research_metrics_issue": research_metrics.get("error_category"),
+        "research_metrics": research_metrics,
+        "configured_scholar_id": faculty.google_scholar_id,
+        "cycle_academic_year": cycle.academic_year,
+        "student_feedback": feedback_data,
     }
 
     runtime.record_start(
@@ -308,6 +406,7 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
 
     score = state.get("score_result") or {}
     report_draft = state.get("report_draft") or {}
+    research_metrics = state.get("research_metrics") or research_metrics
 
     # The graph reaches interrupt() at human_gate().
     # At that point the score/report data has already been calculated,
@@ -347,6 +446,11 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
         ).get("administrative", 0),
         "total_score": score.get("total", 0),
         "line_items": score.get("line_items", []),
+        "category_raw_totals": score.get("category_raw_totals", {}),
+        "category_weights": score.get("category_weights") or {
+            name: float(spec.get("weight", 0.0))
+            for name, spec in load_demo_rubric()["categories"].items()
+        },
         "disclaimer": (
             score.get("disclaimer")
             or load_demo_rubric().get("disclaimer")
@@ -368,6 +472,28 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
     db.add(score_row)
     db.flush()
 
+    deep_research_verification = run_deep_research_verification(
+        activities=payload["activities"],
+        evidence=payload["evidence"],
+        research_metrics=research_metrics,
+    )
+
+    db.add(
+        AuditLog(
+            actor_id=faculty.user_id,
+            action="appraisal_deep_research_verification",
+            entity_type="faculty_profile",
+            entity_id=str(faculty.id),
+            before=None,
+            after={
+                "analyzed_claims": deep_research_verification["total_claims_analyzed"],
+                "verified_count": deep_research_verification["verified_count"],
+                "discrepant_count": deep_research_verification["discrepant_count"],
+                "unverified_count": deep_research_verification["unverified_count"],
+            },
+        )
+    )
+
     built = build_report(
         profile=payload["profile"],
         cycle={
@@ -379,6 +505,10 @@ def run_appraisal(db: Session, *, faculty: FacultyProfile) -> dict:
         activities=payload["activities"],
         evidence=payload["evidence"],
         score=score,
+        research_metrics=research_metrics,
+        deep_research_verification=deep_research_verification,
+        student_feedback=state.get("student_feedback") or feedback_data,
+        memory_context=payload.get("memory_context"),
     )
 
     version = (run.attempt_count or 0) + 1

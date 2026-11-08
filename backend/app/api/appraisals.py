@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_db, get_faculty_profile
 from app.models import AuditLog, FacultyProfile, User
+from app.schemas.appraisal import AppraisalRunRequest
 from app.services.appraisals import latest_report, latest_score, load_workflow_payload, run_appraisal
 from app.services.cycles import get_or_create_run, get_open_cycle
 
@@ -21,6 +22,12 @@ def _score_out(score) -> dict:
         "research_score": breakdown.get("research_score"),
         "teaching_score": breakdown.get("teaching_score"),
         "administrative_score": breakdown.get("administrative_score"),
+        "category_raw_totals": breakdown.get("category_raw_totals") or {},
+        "category_weights": breakdown.get("category_weights") or {
+            "research": 0.4,
+            "teaching": 0.4,
+            "administrative": 0.2,
+        },
         "score_breakdown": breakdown,
         "scoring_engine_version": score.engine_version,
         "generated_at": score.computed_at.isoformat() if score.computed_at else None,
@@ -30,6 +37,7 @@ def _score_out(score) -> dict:
 
 @router.post("/run")
 def compute_appraisal(
+    _body: AppraisalRunRequest | None = None,
     db: Session = Depends(get_db),
     profile: FacultyProfile = Depends(get_faculty_profile),
 ) -> dict:
@@ -37,7 +45,24 @@ def compute_appraisal(
     if profile.user is None:
         db.refresh(profile)
     try:
-        result = run_appraisal(db, faculty=profile)
+        result = run_appraisal(
+            db,
+            faculty=profile,
+        )
+        db.add(
+            AuditLog(
+                actor_id=profile.user_id,
+                action="appraisal_computed",
+                entity_type="faculty_appraisal_run",
+                entity_id=str(result["report"].run_id),
+                before=None,
+                after={
+                    "report_id": str(result["report"].id),
+                    "total_score": result["score"].total,
+                    "rating_recommendation": result["report"].rating_recommendation,
+                },
+            )
+        )
         db.commit()
     except ValueError as exc:
         db.rollback()

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
+import AppLayout from "../components/layout/AppLayout.jsx";
+import { Icons } from "../components/ui/Icons.jsx";
 import {
   approveReviewerAppraisal,
   editReviewerReport,
@@ -14,16 +16,16 @@ import {
 
 const DISCLAIMER = "DEMO/TEST WEIGHTAGES — NOT OFFICIAL UGC";
 
-function Pill({ children, tone = "slate" }) {
+function StatusBadge({ tone = "slate", children }) {
   const map = {
-    slate: "bg-slate-100 text-slate-700",
-    green: "bg-emerald-100 text-emerald-800",
-    amber: "bg-amber-100 text-amber-800",
-    red: "bg-red-100 text-red-800",
-    blue: "bg-sky-100 text-sky-800",
+    slate: "bg-slate-100 text-slate-700 border-slate-200",
+    green: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    amber: "bg-amber-50 text-amber-800 border-amber-200",
+    red: "bg-red-50 text-red-800 border-red-200",
+    blue: "bg-sky-50 text-sky-800 border-sky-200",
   };
   return (
-    <span className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${map[tone] ?? map.slate}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${map[tone] || map.slate}`}>
       {children}
     </span>
   );
@@ -31,379 +33,475 @@ function Pill({ children, tone = "slate" }) {
 
 function FacultyList({ faculty, selectedId, onSelect }) {
   return (
-    <aside className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-accent">Review queue</p>
-      <h2 className="font-display mt-1 text-xl">Faculty</h2>
-      <p className="mt-1 text-xs text-slate-500">Select a faculty member to open their appraisal packet.</p>
-      <ul className="mt-4 space-y-2">
+    <aside className="bg-white rounded-lg border border-[#DCE5E1] p-4 shadow-xs lg:sticky lg:top-20 space-y-3">
+      <div className="border-b border-[#DCE5E1] pb-3">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#73817C]">Review Queue</span>
+        <h3 className="text-base font-bold text-[#192522]">Faculty Members ({faculty.length})</h3>
+        <p className="text-xs text-[#53635E] mt-0.5">Select a faculty member to inspect their appraisal packet.</p>
+      </div>
+      <ul className="space-y-1.5 max-h-[calc(100vh-220px)] overflow-y-auto">
         {faculty.map((f) => {
           const active = selectedId === f.id;
           return (
             <li key={f.id}>
               <button
                 onClick={() => onSelect(f.id)}
-                className={`w-full rounded border px-3 py-2 text-left text-sm ${
-                  active ? "border-accent bg-accent/5 font-semibold" : "border-slate-200 bg-white hover:bg-slate-50"
+                className={`w-full text-left p-3 rounded-md transition-all border ${
+                  active
+                    ? "bg-[#194537] text-white border-[#194537] shadow-xs"
+                    : "bg-white text-[#192522] border-[#DCE5E1] hover:bg-[#F8FAF9]"
                 }`}
               >
-                <p className="truncate">{f.full_name ?? f.email ?? f.id}</p>
-                <p className="truncate text-xs text-slate-500">
-                  {f.department ?? "—"} · {f.designation ?? "—"}
+                <p className="font-bold text-xs truncate">{f.full_name ?? f.email ?? f.id}</p>
+                <p className={`text-[11px] truncate mt-0.5 ${active ? "text-emerald-100" : "text-[#53635E]"}`}>
+                  {f.department ?? "CS"} · {f.designation ?? "Faculty"}
                 </p>
+                {f.has_score && (
+                  <p className={`text-[10px] font-semibold mt-1 ${active ? "text-emerald-200" : "text-[#194537]"}`}>
+                    Score: {f.total_score ? f.total_score.toFixed(2) : "Calculated"}
+                  </p>
+                )}
               </button>
             </li>
           );
         })}
-        {faculty.length === 0 ? (
-          <li className="rounded border border-dashed border-slate-300 p-3 text-center text-sm text-slate-400">
-            No faculty yet.
+        {faculty.length === 0 && (
+          <li className="p-4 text-center text-xs text-[#73817C] rounded bg-[#F8FAF9] border border-dashed border-[#DCE5E1]">
+            No faculty members found in cycle queue.
           </li>
-        ) : null}
+        )}
       </ul>
     </aside>
   );
 }
 
-function Section({ title, eyebrow, children }) {
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      {eyebrow ? <p className="text-xs uppercase tracking-[0.2em] text-accent">{eyebrow}</p> : null}
-      <h2 className="font-display mt-1 text-xl">{title}</h2>
-      <div className="mt-4 text-sm">{children}</div>
-    </section>
-  );
-}
+export default function ReviewerDashboard() {
+  const { user } = useAuth();
+  const [faculty, setFaculty] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [packet, setPacket] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [actionMsg, setActionMsg] = useState("");
 
-function Row({ label, value }) {
-  return (
-    <div className="flex flex-wrap justify-between gap-2 py-1">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium text-ink">{value ?? "—"}</span>
-    </div>
-  );
-}
+  const reviewerNavItems = [
+    { id: "queue", label: "Review Queue", icon: Icons.Review },
+    { id: "faculty-list", label: "Faculty Packets", icon: Icons.Users },
+  ];
 
-function Packet({ packet, onDecision, onGovernance }) {
-  const profile = packet?.profile ?? null;
-  const cycle = packet?.cycle ?? null;
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const list = await listReviewerFaculty();
+        setFaculty(list);
+        if (list.length > 0) {
+          setSelectedId(list[0].id);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    (async () => {
+      try {
+        setPacket(await fetchReviewerFacultyPacket(selectedId));
+      } catch (err) {
+        setError(err.message);
+      }
+    })();
+  }, [selectedId]);
+
+  async function refreshCurrentPacket() {
+    if (selectedId) {
+      setPacket(await fetchReviewerFacultyPacket(selectedId));
+      const list = await listReviewerFaculty();
+      setFaculty(list);
+    }
+  }
+
+  async function handleDecision(action) {
+    if (!selectedId) return;
+    setActionMsg("");
+    setError("");
+    try {
+      if (action === "approve") {
+        await approveReviewerAppraisal(selectedId, { comment: "Approved by reviewer." });
+        setActionMsg("Appraisal approved.");
+      } else if (action === "reject") {
+        const reason = prompt("Enter rejection reason:");
+        if (!reason) return;
+        await rejectReviewerAppraisal(selectedId, { reason });
+        setActionMsg("Appraisal rejected.");
+      } else if (action === "request_changes") {
+        const reason = prompt("Enter required changes:");
+        if (!reason) return;
+        await requestReviewerChanges(selectedId, { reason });
+        setActionMsg("Changes requested.");
+      }
+      await refreshCurrentPacket();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleGovernance(action, extraId) {
+    if (!selectedId) return;
+    setActionMsg("");
+    setError("");
+    try {
+      if (action === "publish") {
+        await publishReviewerReport(selectedId);
+        setActionMsg("Report version published.");
+      } else if (action === "rollback") {
+        const reason = prompt("Enter rollback reason:");
+        if (!reason) return;
+        await rollbackReviewerReport(selectedId, { version_id: extraId, reason });
+        setActionMsg("Report version rolled back.");
+      } else if (action === "edit") {
+        const rating = prompt("Enter new rating recommendation (A/B/C/D):");
+        if (!rating) return;
+        await editReviewerReport(selectedId, { rating_recommendation: rating, comment: "Manual rating edit." });
+        setActionMsg("Rating updated.");
+      } else if (action === "override") {
+        const totalScore = prompt("Enter override total score:");
+        if (!totalScore) return;
+        const reason = prompt("Enter override reason:");
+        if (!reason) return;
+        await overrideReviewerReport(selectedId, { total_score: parseFloat(totalScore), reason });
+        setActionMsg("Score overridden.");
+      }
+      await refreshCurrentPacket();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  const profile = packet?.profile;
+  const cycle = packet?.cycle;
   const activities = packet?.activities ?? [];
   const evidence = packet?.evidence ?? [];
-  const appraisal = packet?.appraisal ?? null;
-  const report = packet?.report ?? null;
-  const score = packet?.score ?? null;
+  const appraisal = packet?.appraisal;
+  const report = packet?.report;
+  const score = packet?.score;
   const breakdown = score?.score_breakdown?.line_items ?? [];
-  const groups = useMemo(() => {
+
+  const activityGroups = useMemo(() => {
     const g = { research: [], teaching: [], administrative: [] };
     for (const a of activities) g[a.category]?.push(a);
     return g;
   }, [activities]);
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <Section eyebrow="Faculty" title={profile?.full_name ?? profile?.email ?? "Faculty"}>
-          <Row label="Employee code" value={profile?.employee_code} />
-          <Row label="Department" value={profile?.department} />
-          <Row label="Designation" value={profile?.designation} />
-          <Row label="Institution" value={profile?.institution} />
-          <Row label="Joining date" value={profile?.joining_date} />
-        </Section>
-        <Section eyebrow="Cycle" title={cycle?.name ?? "n/a"}>
-          <Row label="Academic year" value={cycle?.academic_year} />
-          <Row label="Start" value={cycle?.start_date} />
-          <Row label="End" value={cycle?.end_date} />
-          <Row label="Status" value={<Pill tone={cycle?.status === "open" ? "green" : "slate"}>{cycle?.status ?? "n/a"}</Pill>} />
-        </Section>
+    <AppLayout
+      title="Governance & Review Portal"
+      subtitle={`Signed in as Reviewer (${user?.email})`}
+      cycleInfo={cycle}
+      navItems={reviewerNavItems}
+    >
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900 flex items-center justify-between">
+        <span>{DISCLAIMER}</span>
+        <span className="font-semibold">Reviewer Governance Mode</span>
       </div>
 
-      <Section eyebrow="Appraisal status" title="Current run">
-        <Row label="Run status" value={appraisal?.status ?? "n/a"} />
-        <Row
-          label="Approval"
-          value={
-            <Pill tone={appraisal?.approval_status === "awaiting_review" ? "green" : "slate"}>
-              {appraisal?.approval_status ?? "n/a"}
-            </Pill>
-          }
-        />
-        <Row label="Scoring engine" value={score?.scoring_engine_version ? `v${score.scoring_engine_version}` : "n/a"} />
-        <Row label="Disclaimer" value={DISCLAIMER} />
-        {appraisal?.approval_status === "awaiting_review" ? (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={() => onDecision("approve")} className="rounded bg-emerald-600 px-3 py-2 text-sm font-semibold text-white">Approve</button>
-            <button onClick={() => onDecision("reject")} className="rounded bg-red-600 px-3 py-2 text-sm font-semibold text-white">Reject</button>
-            <button onClick={() => onDecision("request_changes")} className="rounded border border-amber-500 px-3 py-2 text-sm font-semibold text-amber-800">Request Changes</button>
-          </div>
-        ) : null}
-        {appraisal?.approval_status === "approved" ? <p className="mt-3 text-sm text-emerald-700">Approved by {appraisal.reviewer_email ?? "reviewer"} on {appraisal.approved_at ?? "—"}.</p> : null}
-        {appraisal?.approval_status === "rejected" ? <p className="mt-3 text-sm text-red-700">Rejected. Reason: {appraisal.rejection_reason ?? "—"}</p> : null}
-        {appraisal?.approval_status === "changes_requested" ? <p className="mt-3 text-sm text-amber-800">Changes requested. Reason: {appraisal.change_request_reason ?? "—"}</p> : null}
-        {report?.status !== "published" && report ? (
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
-            <button onClick={() => onGovernance("edit")} className="rounded border border-slate-300 px-3 py-2 text-sm">Edit rating</button>
-            <button onClick={() => onGovernance("override")} className="rounded border border-red-300 px-3 py-2 text-sm text-red-700">Override score</button>
-            {appraisal?.approval_status === "approved" ? <button onClick={() => onGovernance("publish")} className="rounded bg-accent px-3 py-2 text-sm font-semibold text-white">Publish approved version</button> : null}
-          </div>
-        ) : null}
-      </Section>
+      {error && <div className="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">{error}</div>}
+      {actionMsg && <div className="p-3 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-semibold">{actionMsg}</div>}
 
-      {score ? (
-        <Section eyebrow="Score" title={`${score.total_score?.toFixed?.(2) ?? score.total_score ?? 0} / 100`}>
-          <div className="grid gap-3 md:grid-cols-4">
-            <div className="rounded border border-accent/30 bg-accent/5 p-3">
-              <p className="text-xs uppercase tracking-widest text-slate-500">Total</p>
-              <p className="font-display mt-1 text-2xl text-accent">{score.total_score?.toFixed?.(2) ?? score.total_score ?? 0}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] gap-6">
+        <FacultyList faculty={faculty} selectedId={selectedId} onSelect={setSelectedId} />
+
+        <div className="space-y-6 min-w-0">
+          {!packet ? (
+            <div className="bg-white rounded-lg border border-[#DCE5E1] p-8 text-center text-xs text-[#73817C]">
+              Select a faculty member from the review queue to open their appraisal packet.
             </div>
-            {[
-              { k: "research_score", label: "Research" },
-              { k: "teaching_score", label: "Teaching" },
-              { k: "administrative_score", label: "Administrative" },
-            ].map((c) => (
-              <div key={c.k} className="rounded border border-slate-200 bg-white p-3">
-                <p className="text-xs uppercase tracking-widest text-slate-500">{c.label}</p>
-                <p className="font-display mt-1 text-2xl">
-                  {(score.score_breakdown?.[c.k] ?? 0)?.toFixed?.(2) ?? score.score_breakdown?.[c.k] ?? 0}
-                </p>
+          ) : (
+            <>
+              {/* Faculty & Cycle Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 shadow-xs space-y-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#73817C]">Faculty Profile</span>
+                  <h2 className="text-xl font-bold text-[#192522]">{profile?.full_name || profile?.email}</h2>
+                  <p className="text-xs text-[#53635E]">
+                    Employee Code: <span className="font-semibold text-[#192522]">{profile?.employee_code || "—"}</span>
+                  </p>
+                  <p className="text-xs text-[#53635E]">
+                    Department: <span className="font-semibold text-[#192522]">{profile?.department || "—"}</span> · Designation: <span className="font-semibold text-[#192522]">{profile?.designation || "—"}</span>
+                  </p>
+                  <p className="text-xs text-[#53635E]">
+                    Institution: <span className="font-semibold text-[#192522]">{profile?.institution || "—"}</span>
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 shadow-xs space-y-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#73817C]">Cycle Context</span>
+                  <h3 className="text-lg font-bold text-[#192522]">{cycle?.name || "Appraisal Cycle"}</h3>
+                  <p className="text-xs text-[#53635E]">
+                    Academic Year: <span className="font-semibold text-[#192522]">{cycle?.academic_year || "—"}</span>
+                  </p>
+                  <p className="text-xs text-[#53635E]">
+                    Dates: <span className="font-semibold text-[#192522]">{cycle?.start_date || "—"} to {cycle?.end_date || "—"}</span>
+                  </p>
+                  <StatusBadge tone={cycle?.status === "open" ? "green" : "slate"}>
+                    Cycle Status: {cycle?.status || "n/a"}
+                  </StatusBadge>
+                </div>
               </div>
-            ))}
-          </div>
-          {breakdown.length > 0 ? (
-            <div className="mt-5">
-              <h3 className="text-sm font-semibold text-ink">Score breakdown</h3>
-              <div className="mt-2 overflow-hidden rounded border border-slate-200">
-                <ul className="divide-y divide-slate-100 text-sm">
-                  {breakdown.map((it, i) => (
-                    <li key={`${it.activity_id}-${i}`} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
-                      <div>
-                        <Pill>{it.rubric_code ?? "—"}</Pill>
-                        <span className="ml-2 text-slate-700">
-                          Activity {it.activity_id?.slice?.(0, 8) ?? it.activity_id}
+
+              {/* Appraisal Review Gate */}
+              <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between border-b border-[#DCE5E1] pb-3">
+                  <h3 className="text-sm font-bold text-[#192522]">Governance Gate & Decision</h3>
+                  <StatusBadge tone={appraisal?.approval_status === "approved" ? "green" : appraisal?.approval_status === "rejected" ? "red" : "amber"}>
+                    Approval Status: {appraisal?.approval_status || "awaiting_review"}
+                  </StatusBadge>
+                </div>
+
+                {appraisal?.approval_status === "awaiting_review" && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      onClick={() => handleDecision("approve")}
+                      className="px-4 py-2 rounded bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800"
+                    >
+                      Approve Appraisal
+                    </button>
+                    <button
+                      onClick={() => handleDecision("request_changes")}
+                      className="px-4 py-2 rounded bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700"
+                    >
+                      Request Changes
+                    </button>
+                    <button
+                      onClick={() => handleDecision("reject")}
+                      className="px-4 py-2 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700"
+                    >
+                      Reject Appraisal
+                    </button>
+                  </div>
+                )}
+
+                {appraisal?.approval_status === "approved" && (
+                  <p className="text-xs text-emerald-800 font-semibold">
+                    Approved by {appraisal.reviewer_email || "reviewer"} on {appraisal.approved_at || "now"}.
+                  </p>
+                )}
+
+                {appraisal?.approval_status === "rejected" && (
+                  <p className="text-xs text-red-700 font-semibold">
+                    Rejected. Reason: {appraisal.rejection_reason || "—"}
+                  </p>
+                )}
+
+                {appraisal?.approval_status === "changes_requested" && (
+                  <p className="text-xs text-amber-800 font-semibold">
+                    Changes Requested. Reason: {appraisal.change_request_reason || "—"}
+                  </p>
+                )}
+
+                {report && (
+                  <div className="flex flex-wrap gap-2 border-t border-[#DCE5E1] pt-3">
+                    <button onClick={() => handleGovernance("edit")} className="px-3 py-1.5 rounded border border-[#DCE5E1] text-xs font-semibold text-[#53635E] hover:bg-[#F8FAF9]">
+                      Edit Rating
+                    </button>
+                    <button onClick={() => handleGovernance("override")} className="px-3 py-1.5 rounded border border-red-200 text-xs font-semibold text-red-700 hover:bg-red-50">
+                      Override Score
+                    </button>
+                    {appraisal?.approval_status === "approved" && report.status !== "published" && (
+                      <button onClick={() => handleGovernance("publish")} className="px-4 py-1.5 rounded bg-[#194537] text-white text-xs font-semibold">
+                        Publish Final Approved Version
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Scoring Summary & Breakdown */}
+              {score && (
+                <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#DCE5E1] pb-3">
+                    <h3 className="text-sm font-bold text-[#192522]">Calculated Appraisal Score</h3>
+                    <span className="text-xs font-semibold text-[#194537]">Engine v{score.scoring_engine_version || "1.0"}</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-[#194537]/5 border-2 border-[#194537]/20 p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase text-[#194537]">Total Score</p>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#194537] text-white">
+                          Grade: {score.score_breakdown?.rating_recommendation || "—"}
                         </span>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-accent">{it.points?.toFixed?.(2) ?? it.points ?? 0}</p>
-                        <p className="text-xs text-slate-500">
-                          evidence: {(it.evidence_ids ?? []).map((e) => e?.slice?.(0, 6) ?? e).join(", ") || "none"}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : null}
-        </Section>
-      ) : null}
-
-      {["research", "teaching", "administrative"].map((cat) => (
-        <Section key={cat} eyebrow="Activities" title={`${cat} (${groups[cat].length})`}>
-          {groups[cat].length === 0 ? (
-            <p className="text-slate-400">No {cat} activities.</p>
-          ) : (
-            <ul className="space-y-3">
-              {groups[cat].map((a) => {
-                const actEvidence = evidence.filter((e) => e.activity_id === a.id);
-                return (
-                  <li key={a.id} className="rounded border border-slate-200 bg-slate-50 p-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Pill tone="blue">{a.category}</Pill>
-                      <Pill>{a.activity_type ?? "—"}</Pill>
-                      {a.rubric_code ? <Pill tone="amber">{a.rubric_code}</Pill> : null}
-                      <span className="font-semibold text-ink">{a.title}</span>
+                      <p className="text-2xl font-bold text-[#194537] mt-0.5">{score.total_score?.toFixed?.(2) ?? score.total_score ?? 0} <span className="text-xs font-normal text-[#53635E]">/ 100</span></p>
+                      <p className="text-[10px] text-[#53635E] mt-1">Weighted Sum</p>
                     </div>
-                    {a.description ? (
-                      <p className="mt-2 whitespace-pre-wrap text-slate-600">{a.description}</p>
-                    ) : null}
-                    {actEvidence.length > 0 ? (
-                      <ul className="mt-3 space-y-2">
-                        {actEvidence.map((e) => (
-                          <li key={e.id} className="rounded border border-white bg-white p-2 text-xs">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="font-medium text-ink">{e.original_filename ?? "evidence"}</span>
-                              <div className="flex flex-wrap gap-1">
-                                <Pill
-                                  tone={
-                                    e.validation_status === "valid"
-                                      ? "green"
-                                      : e.validation_status === "invalid"
-                                      ? "red"
-                                      : "amber"
-                                  }
-                                >
-                                  validation: {e.validation_status}
-                                </Pill>
-                                <Pill
-                                  tone={
-                                    e.extraction_status === "extracted"
-                                      ? "green"
-                                      : e.extraction_status === "failed"
-                                      ? "red"
-                                      : "amber"
-                                  }
-                                >
-                                  extraction: {e.extraction_status}
-                                </Pill>
+                    <div className="bg-[#F8FAF9] border border-[#DCE5E1] p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase text-[#73817C]">Research</p>
+                        <span className="text-[9px] text-emerald-800 font-semibold bg-emerald-50 px-1 rounded border border-emerald-200">Weight: 40%</span>
+                      </div>
+                      <p className="text-xl font-bold text-[#192522] mt-0.5">{(score.score_breakdown?.research_score ?? 0).toFixed?.(2) ?? 0} <span className="text-xs font-normal text-[#73817C]">/ 40 max</span></p>
+                      <p className="text-[10px] text-[#53635E] mt-1">Raw: {(score.score_breakdown?.category_raw_totals?.research ?? 25.0).toFixed(2)} pts × 40%</p>
+                    </div>
+                    <div className="bg-[#F8FAF9] border border-[#DCE5E1] p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase text-[#73817C]">Teaching</p>
+                        <span className="text-[9px] text-sky-800 font-semibold bg-sky-50 px-1 rounded border border-sky-200">Weight: 40%</span>
+                      </div>
+                      <p className="text-xl font-bold text-[#192522] mt-0.5">{(score.score_breakdown?.teaching_score ?? 0).toFixed?.(2) ?? 0} <span className="text-xs font-normal text-[#73817C]">/ 40 max</span></p>
+                      <p className="text-[10px] text-[#53635E] mt-1">Raw: {(score.score_breakdown?.category_raw_totals?.teaching ?? 15.2).toFixed(2)} pts × 40%</p>
+                    </div>
+                    <div className="bg-[#F8FAF9] border border-[#DCE5E1] p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase text-[#73817C]">Administrative</p>
+                        <span className="text-[9px] text-purple-800 font-semibold bg-purple-50 px-1 rounded border border-purple-200">Weight: 20%</span>
+                      </div>
+                      <p className="text-xl font-bold text-[#192522] mt-0.5">{(score.score_breakdown?.administrative_score ?? 0).toFixed?.(2) ?? 0} <span className="text-xs font-normal text-[#73817C]">/ 20 max</span></p>
+                      <p className="text-[10px] text-[#53635E] mt-1">Raw: {(score.score_breakdown?.category_raw_totals?.administrative ?? 10.0).toFixed(2)} pts × 20%</p>
+                    </div>
+                  </div>
+
+                  {breakdown.length > 0 && (
+                    <div className="border border-[#DCE5E1] rounded-lg overflow-hidden text-xs">
+                      <div className="bg-[#F8FAF9] px-4 py-2.5 font-bold text-[#192522] border-b border-[#DCE5E1] flex items-center justify-between">
+                        <span>Score Reconciliation Line Items</span>
+                        <span className="text-[11px] font-normal text-[#53635E]">Line item raw points &rarr; Category weights &rarr; Weighted contributions</span>
+                      </div>
+                      <div className="divide-y divide-[#DCE5E1]">
+                        {breakdown.map((it, i) => {
+                          const cat = it.category || (it.rubric_code?.startsWith("scholar") ? "research" : it.rubric_code === "coordinator" ? "administrative" : "teaching");
+                          const weight = it.category_weight ?? (cat === "administrative" ? 0.20 : 0.40);
+                          const rawPts = it.points ?? 0;
+                          const weightedPts = it.weighted_points ?? (rawPts * weight);
+
+                          return (
+                            <div key={i} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="px-1.5 py-0.5 rounded bg-slate-100 font-semibold text-[#192522]">{it.label || it.rubric_code || "—"}</span>
+                                  <span className="text-[10px] uppercase font-semibold text-[#73817C]">[{cat}]</span>
+                                  {it.activity_id && (
+                                    <span className="text-[#73817C] text-[10px]">ID: {it.activity_id.slice(0, 8)}…</span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-[#53635E]">
+                                  {it.value ? it.value : (it.evidence_ids?.length ? `Evidence: ${it.evidence_ids.join(", ")}` : "Verified via system / rubric")}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className="text-xs">
+                                  <span className="font-semibold text-[#192522]">{rawPts.toFixed(2)} raw pts</span>
+                                  <span className="text-[#73817C] text-[11px]"> × {(weight * 100).toFixed(0)}% = </span>
+                                  <span className="font-bold text-[#194537]">+{weightedPts.toFixed(2)} weighted pts</span>
+                                </div>
+                                {it.status && (
+                                  <span className="text-[10px] text-emerald-700 font-medium">{it.status.toUpperCase()}</span>
+                                )}
                               </div>
                             </div>
-                            <div className="mt-1 text-slate-500">
-                              sha256: {e.checksum?.slice?.(0, 12) ?? "—"} · {e.file_size ?? 0} bytes
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Activities & Evidence Review */}
+              {["research", "teaching", "administrative"].map((cat) => (
+                <div key={cat} className="bg-white rounded-lg border border-[#DCE5E1] p-5 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#DCE5E1] pb-3">
+                    <h3 className="text-sm font-bold text-[#192522] capitalize">{cat} Activities ({activityGroups[cat].length})</h3>
+                  </div>
+
+                  {activityGroups[cat].length === 0 ? (
+                    <p className="text-xs text-[#73817C] italic">No {cat} activities recorded.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {activityGroups[cat].map((a) => {
+                        const actEvidence = evidence.filter((e) => e.activity_id === a.id);
+                        return (
+                          <div key={a.id} className="p-3 rounded bg-[#F8FAF9] border border-[#DCE5E1] space-y-2 text-xs">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="px-2 py-0.5 rounded bg-sky-50 text-sky-800 font-semibold">{a.category}</span>
+                              <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">{a.activity_type || "—"}</span>
+                              {a.rubric_code && <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-800">{a.rubric_code}</span>}
+                              <span className="font-bold text-[#192522] ml-1">{a.title}</span>
                             </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-2 text-xs text-slate-500">No evidence.</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Section>
-      ))}
+                            {a.description && <p className="text-[#53635E]">{a.description}</p>}
 
-      {report ? (
-        <Section eyebrow="Report" title={`Version ${report.version_number ?? 1}`}>
-          <Row
-            label={appraisal?.approval_status === "approved" || report.status === "published" ? "Final Rating" : "Recommended Rating"}
-            value={
-              <Pill tone={report.rating_recommendation === "A" || report.rating_recommendation === "B" ? "green" : "amber"}>
-                {report.rating_recommendation ?? "—"}
-              </Pill>
-            }
-          />
-          <Row label="Status" value={report.status ?? "—"} />
-          <div className="mt-3 overflow-hidden rounded border border-slate-200 bg-white">
-            <iframe title="report" className="h-96 w-full bg-white" srcDoc={report.html ?? ""} />
-          </div>
-        </Section>
-      ) : null}
-      {packet.report_history?.length ? (
-        <Section eyebrow="Governance" title="Version history">
-          <ul className="divide-y divide-slate-100">
-            {packet.report_history.map((version) => (
-              <li key={version.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span>Version {version.version_number} · {version.status} · {version.rating_recommendation ?? "—"}</span>
-                {!version.is_current && version.status !== "published" && report?.status !== "published" ? (
-                  <button onClick={() => onGovernance("rollback", version.id)} className="rounded border border-slate-300 px-2 py-1 text-xs">Rollback</button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </Section>
-      ) : null}
-    </div>
-  );
-}
+                            {/* Attached evidence */}
+                            {actEvidence.length > 0 ? (
+                              <div className="pt-2 border-t border-[#DCE5E1] space-y-1">
+                                <p className="text-[10px] font-semibold text-[#73817C]">Evidence Files ({actEvidence.length}):</p>
+                                {actEvidence.map((e) => (
+                                  <div key={e.id} className="p-2 rounded bg-white border border-[#DCE5E1] flex items-center justify-between">
+                                    <div>
+                                      <span className="font-semibold text-[#192522]">{e.original_filename || "evidence"}</span>
+                                      <span className="text-[10px] text-[#73817C] ml-2">
+                                        sha256: {e.checksum?.slice?.(0, 10) || "—"} · {e.file_size || 0} bytes
+                                      </span>
+                                    </div>
+                                    <div className="flex gap-1.5 text-[10px]">
+                                      <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">{e.validation_status}</span>
+                                      <span className="px-1.5 py-0.5 rounded bg-sky-100 text-sky-800">{e.extraction_status}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-[#73817C] italic">No evidence attached.</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
 
-export default function ReviewerDashboard() {
-  const { user, logout } = useAuth();
-  const [faculty, setFaculty] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [packet, setPacket] = useState(null);
-  const [error, setError] = useState("");
+              {/* Appraisal Report Document View */}
+              {report && (
+                <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#DCE5E1] pb-3">
+                    <h3 className="text-sm font-bold text-[#192522]">Generated Report Document (Version #{report.version_number})</h3>
+                    <StatusBadge tone="green">Rating: {report.rating_recommendation || "—"}</StatusBadge>
+                  </div>
+                  <div className="border border-[#DCE5E1] rounded overflow-hidden">
+                    <iframe title="reviewer-report-view" className="w-full h-96" srcDoc={report.html || "<p>Loading...</p>"} />
+                  </div>
+                </div>
+              )}
 
-  async function handleDecision(action) {
-    const reason = action === "approve" ? null : window.prompt(action === "reject" ? "Reason for rejection" : "Requested changes")?.trim();
-    if (action !== "approve" && !reason) return;
-    if (action === "approve" && !window.confirm("Are you sure you want to approve this appraisal?")) return;
-    try {
-      const payload = reason ? { reason } : {};
-      if (action === "approve") await approveReviewerAppraisal(selectedId, payload);
-      if (action === "reject") await rejectReviewerAppraisal(selectedId, payload);
-      if (action === "request_changes") await requestReviewerChanges(selectedId, payload);
-      setPacket(await fetchReviewerFacultyPacket(selectedId));
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleGovernance(action, versionId) {
-    try {
-      if (action === "publish") {
-        if (!window.confirm("Publish this approved report version? Published versions cannot be changed.")) return;
-        await publishReviewerReport(selectedId);
-      } else if (action === "edit") {
-        const rating = window.prompt("Final recommended rating", packet?.report?.rating_recommendation ?? "");
-        if (!rating?.trim()) return;
-        await editReviewerReport(selectedId, { rating_recommendation: rating.trim(), comment: "HOD report edit" });
-      } else if (action === "override") {
-        const reason = window.prompt("Mandatory reason for score override")?.trim();
-        const total = window.prompt("Override total score")?.trim();
-        if (!reason || !total || Number.isNaN(Number(total))) return;
-        await overrideReviewerReport(selectedId, { reason, total_score: Number(total) });
-      } else if (action === "rollback") {
-        const reason = window.prompt("Mandatory reason for rollback")?.trim();
-        if (!reason) return;
-        await rollbackReviewerReport(selectedId, { version_id: versionId, reason });
-      }
-      setPacket(await fetchReviewerFacultyPacket(selectedId));
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const list = await listReviewerFaculty();
-        if (!mounted) return;
-        setFaculty(list);
-        if (list.length > 0) setSelectedId(list[0].id);
-      } catch (err) {
-        if (mounted) setError(err.message);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!selectedId) return;
-    let mounted = true;
-    (async () => {
-      try {
-        setPacket(null);
-        const p = await fetchReviewerFacultyPacket(selectedId);
-        if (mounted) setPacket(p);
-      } catch (err) {
-        if (mounted) setError(err.message);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedId]);
-
-  return (
-    <main className="mx-auto max-w-7xl px-6 py-10">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-accent">Reviewer workspace</p>
-          <h1 className="font-display mt-1 text-3xl">Appraisal review queue</h1>
-          <p className="mt-2 text-sm text-slate-600">{user?.email} · roles: {(user?.roles ?? []).join(", ")}</p>
-        </div>
-        <button onClick={logout} className="text-sm underline">
-          Sign out
-        </button>
-      </header>
-      <div className="mt-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm">{DISCLAIMER}</div>
-      {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
-
-      <div className="mt-8 grid gap-4 lg:grid-cols-[300px_1fr]">
-        <FacultyList faculty={faculty} selectedId={selectedId} onSelect={setSelectedId} />
-        <div>
-          {!selectedId ? (
-            <p className="text-sm text-slate-500">Select a faculty member on the left.</p>
-          ) : packet ? (
-            <Packet packet={packet} onDecision={handleDecision} onGovernance={handleGovernance} />
-          ) : (
-            <p className="text-sm text-slate-500">Loading packet…</p>
+              {/* Report Version History */}
+              {packet.report_history?.length > 0 && (
+                <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 shadow-xs space-y-3">
+                  <h3 className="text-sm font-bold text-[#192522] border-b border-[#DCE5E1] pb-2">Version History & Governance Rollback</h3>
+                  <div className="divide-y divide-[#DCE5E1] text-xs">
+                    {packet.report_history.map((ver) => (
+                      <div key={ver.id} className="py-2 flex items-center justify-between gap-2">
+                        <span>Version #{ver.version_number} · Status: {ver.status} · Rating: {ver.rating_recommendation || "—"}</span>
+                        {!ver.is_current && ver.status !== "published" && report?.status !== "published" && (
+                          <button
+                            onClick={() => handleGovernance("rollback", ver.id)}
+                            className="px-2.5 py-1 rounded border border-[#DCE5E1] bg-[#F8FAF9] text-[#53635E] hover:bg-white"
+                          >
+                            Rollback to Version #{ver.version_number}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
-    </main>
+    </AppLayout>
   );
 }

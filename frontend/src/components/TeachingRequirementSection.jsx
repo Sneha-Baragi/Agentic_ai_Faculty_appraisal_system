@@ -27,42 +27,50 @@ export function TeachingRequirementSection({ req, refresh }) {
     }
   }, [req, refresh]);
 
-  if (loading) return <div className="p-4 text-sm text-slate-500">Loading teaching requirements...</div>;
-  if (error) return <div className="p-4 text-sm text-red-600">Error: {error}</div>;
+  if (loading) return <section className="ui-card animate-pulse p-5" aria-busy="true"><div className="h-4 w-36 rounded bg-subtle" /><div className="mt-5 grid grid-cols-3 gap-3"><div className="h-20 rounded-md bg-subtle" /><div className="h-20 rounded-md bg-subtle" /><div className="h-20 rounded-md bg-subtle" /></div></section>;
+  if (error) return <section role="alert" className="ui-card border-danger/30 p-5 text-sm text-danger">{error}</section>;
   if (!data) return null;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
+    <section className="ui-card h-full p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Teaching Requirements</span>
-          <h3 className="text-lg font-bold text-slate-900 mt-1">Role: {data.role}</h3>
+          <p className="ui-eyebrow">Teaching requirement</p>
+          <h3 className="mt-1 text-lg font-semibold text-ink">{data.role}</h3>
         </div>
         <span
-          className={`px-3 py-1 text-xs font-medium rounded-full ${
+          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
             data.completed
-              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-              : "bg-amber-100 text-amber-800 border border-amber-300"
+              ? "bg-success/10 text-success"
+              : "bg-pending/10 text-pending"
           }`}
         >
-          {data.completed ? "Requirement Met ✓" : "In Progress"}
+          {data.completed ? "Requirement met" : "In progress"}
         </span>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-md bg-slate-50 p-3 border border-slate-100">
-          <span className="block text-xs text-slate-500">Required Hours</span>
-          <span className="block text-xl font-bold text-slate-800 mt-0.5">{data.required_hours} hrs</span>
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="ui-card-subtle p-3">
+          <span className="block text-xs text-text-secondary">Required hours</span>
+          <span className="font-display mt-1 block text-2xl font-semibold text-ink">{data.required_hours} hrs</span>
         </div>
-        <div className="rounded-md bg-slate-50 p-3 border border-slate-100">
-          <span className="block text-xs text-slate-500">Actual Attended Hours</span>
-          <span className="block text-xl font-bold text-emerald-700 mt-0.5">{data.actual_hours} hrs</span>
+        <div className="ui-card-subtle p-3">
+          <span className="block text-xs text-text-secondary">Actual attended hours</span>
+          <span className="font-display mt-1 block text-2xl font-semibold text-success">{data.actual_hours} hrs</span>
         </div>
-        <div className="rounded-md bg-slate-50 p-3 border border-slate-100">
-          <span className="block text-xs text-slate-500">Remaining Hours</span>
-          <span className="block text-xl font-bold text-amber-700 mt-0.5">{data.remaining_hours} hrs</span>
+        <div className="ui-card-subtle p-3">
+          <span className="block text-xs text-text-secondary">Remaining hours</span>
+          <span className="font-display mt-1 block text-2xl font-semibold text-pending">{data.remaining_hours} hrs</span>
         </div>
       </div>
-    </div>
+
+      <div className="mt-3 rounded-md border border-[#DCE5E1] bg-[#F8FAF9] p-3 text-xs text-[#53635E]">
+        <span className="font-semibold text-[#192522]">Workload Compliance vs. Appraisal Scoring:</span>
+        <p className="mt-0.5">
+          This tracker monitors departmental workload compliance ({data.actual_hours} attended, {data.remaining_hours} remaining out of {data.required_hours} hrs required).
+          Under official appraisal policy, remaining required hours are <strong>not deducted</strong> from your appraisal score. Appraisal scoring credits points for validated completed teaching activities (0.50 pts/hr up to rubric cap).
+        </p>
+      </div>
+    </section>
   );
 }

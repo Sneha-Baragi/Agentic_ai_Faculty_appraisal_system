@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
+import AppLayout from "../components/layout/AppLayout.jsx";
+import { Icons } from "../components/ui/Icons.jsx";
 import {
   closeAdminCycle,
   createAdminCycle,
@@ -8,17 +10,23 @@ import {
   listAdminUsers,
   openAdminCycle,
 } from "../api/client.js";
+import { CloudOpsSection } from "../components/CloudOpsSection.jsx";
+import { SDLCFactorySection } from "../components/SDLCFactorySection.jsx";
 
-function StatCard({ label, value, tone = "default" }) {
-  const toneClass =
-    tone === "accent"
-      ? "border-accent/30 bg-accent/5"
-      : "border-slate-200 bg-white";
+function StatTile({ label, value, subtext, icon: IconComp }) {
   return (
-    <article className={`rounded-lg border p-4 shadow-sm ${toneClass}`}>
-      <p className="text-xs uppercase tracking-widest text-slate-500">{label}</p>
-      <p className="mt-2 font-display text-3xl text-ink">{value}</p>
-    </article>
+    <div className="bg-white rounded-lg border border-[#DCE5E1] p-4 shadow-xs flex items-center justify-between">
+      <div>
+        <p className="text-[11px] font-semibold uppercase text-[#73817C]">{label}</p>
+        <p className="text-2xl font-bold text-[#192522] mt-1">{value}</p>
+        {subtext && <p className="text-xs text-[#53635E] mt-0.5">{subtext}</p>}
+      </div>
+      {IconComp && (
+        <div className="h-10 w-10 rounded-lg bg-[#F8FAF9] border border-[#DCE5E1] text-[#194537] flex items-center justify-center shrink-0">
+          <IconComp className="w-5 h-5" />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -45,24 +53,22 @@ function CycleForm({ onSubmit, onCancel }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm"
-    >
+    <form onSubmit={handleSubmit} className="p-4 rounded-lg bg-[#F8FAF9] border border-[#DCE5E1] space-y-4 text-xs">
+      <h4 className="font-bold text-sm text-[#192522]">Create New Appraisal Cycle</h4>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block md:col-span-2">
-          <span className="text-slate-500">Cycle name</span>
+          <span className="text-[#53635E]">Cycle Name</span>
           <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="w-full mt-1 h-9 px-3 rounded border border-[#DCE5E1] bg-white text-xs text-[#192522]"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
           />
         </label>
         <label className="block">
-          <span className="text-slate-500">Academic year</span>
+          <span className="text-[#53635E]">Academic Year</span>
           <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="w-full mt-1 h-9 px-3 rounded border border-[#DCE5E1] bg-white text-xs text-[#192522]"
             placeholder="e.g. 2026-2027"
             value={form.academic_year}
             onChange={(e) => setForm({ ...form, academic_year: e.target.value })}
@@ -70,20 +76,20 @@ function CycleForm({ onSubmit, onCancel }) {
           />
         </label>
         <label className="block">
-          <span className="text-slate-500">Initial status</span>
+          <span className="text-[#53635E]">Initial Status</span>
           <select
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="w-full mt-1 h-9 px-2 rounded border border-[#DCE5E1] bg-white text-xs text-[#192522]"
             value={form.status}
             onChange={(e) => setForm({ ...form, status: e.target.value })}
           >
             <option value="draft">Draft</option>
-            <option value="open">Open immediately</option>
+            <option value="open">Open Immediately</option>
           </select>
         </label>
         <label className="block">
-          <span className="text-slate-500">Start date</span>
+          <span className="text-[#53635E]">Start Date</span>
           <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="w-full mt-1 h-9 px-2 rounded border border-[#DCE5E1] bg-white text-xs text-[#192522]"
             type="date"
             value={form.start_date}
             onChange={(e) => setForm({ ...form, start_date: e.target.value })}
@@ -91,9 +97,9 @@ function CycleForm({ onSubmit, onCancel }) {
           />
         </label>
         <label className="block">
-          <span className="text-slate-500">End date</span>
+          <span className="text-[#53635E]">End Date</span>
           <input
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+            className="w-full mt-1 h-9 px-2 rounded border border-[#DCE5E1] bg-white text-xs text-[#192522]"
             type="date"
             value={form.end_date}
             onChange={(e) => setForm({ ...form, end_date: e.target.value })}
@@ -101,60 +107,33 @@ function CycleForm({ onSubmit, onCancel }) {
           />
         </label>
       </div>
-      {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
-      <div className="mt-4 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded border border-slate-300 px-3 py-1.5"
-        >
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <div className="flex justify-end gap-2 pt-2 border-t border-[#DCE5E1]">
+        <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded border border-[#DCE5E1] text-xs font-semibold text-[#53635E]">
           Cancel
         </button>
-        <button
-          type="submit"
-          className="rounded bg-accent px-3 py-1.5 font-semibold text-white"
-        >
-          Create cycle
+        <button type="submit" className="px-4 py-1.5 rounded bg-[#194537] text-white text-xs font-semibold">
+          Save Cycle
         </button>
       </div>
     </form>
   );
 }
 
-function statusTone(status) {
-  if (status === "open") return "green";
-  if (status === "closed") return "slate";
-  if (status === "draft") return "amber";
-  return "slate";
-}
-
-function StatusPill({ status }) {
-  const tone = statusTone(status);
-  const map = {
-    slate: "bg-slate-100 text-slate-700",
-    green: "bg-emerald-100 text-emerald-800",
-    amber: "bg-amber-100 text-amber-800",
-    red: "bg-red-100 text-red-800",
-  };
-  return (
-    <span
-      className={`rounded px-2 py-0.5 text-xs font-medium ${
-        map[tone] ?? map.slate
-      }`}
-    >
-      {status}
-    </span>
-  );
-}
-
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [status, setStatus] = useState(null);
   const [users, setUsers] = useState([]);
   const [cycles, setCycles] = useState([]);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(null);
+
+  const adminNavItems = [
+    { id: "overview", label: "Admin Overview", icon: Icons.Overview },
+    { id: "cycles", label: "Cycle Management", icon: Icons.Schedule },
+    { id: "users", label: "User Accounts", icon: Icons.Users },
+  ];
 
   async function refresh() {
     try {
@@ -172,25 +151,7 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const [s, u, c] = await Promise.all([
-          fetchAdminStatus(),
-          listAdminUsers(),
-          listAdminCycles(),
-        ]);
-        if (!mounted) return;
-        setStatus(s);
-        setUsers(u);
-        setCycles(c);
-      } catch (err) {
-        if (mounted) setError(err.message);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
+    refresh();
   }, []);
 
   async function handleCreate(payload) {
@@ -199,11 +160,10 @@ export default function AdminDashboard() {
     await refresh();
   }
 
-  async function handleOpen(cycleId) {
-    setBusy(cycleId);
-    setError("");
+  async function handleOpenCycle(id) {
+    setBusy(id);
     try {
-      await openAdminCycle(cycleId);
+      await openAdminCycle(id);
       await refresh();
     } catch (err) {
       setError(err.message);
@@ -212,11 +172,10 @@ export default function AdminDashboard() {
     }
   }
 
-  async function handleClose(cycleId) {
-    setBusy(cycleId);
-    setError("");
+  async function handleCloseCycle(id) {
+    setBusy(id);
     try {
-      await closeAdminCycle(cycleId);
+      await closeAdminCycle(id);
       await refresh();
     } catch (err) {
       setError(err.message);
@@ -226,194 +185,164 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-accent">
-            Admin dashboard
-          </p>
-          <h1 className="font-display mt-1 text-3xl">
-            System status &amp; overview
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Signed in as {user?.email}
-          </p>
-        </div>
-        <button onClick={logout} className="text-sm underline">
-          Sign out
-        </button>
-      </header>
+    <AppLayout
+      title="System Administration Console"
+      subtitle={`Signed in as Admin (${user?.email})`}
+      navItems={adminNavItems}
+    >
+      {error && <div className="p-3 rounded bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">{error}</div>}
 
-      <div className="mt-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm">
-        DEMO/TEST WEIGHTAGES — NOT OFFICIAL UGC. Approval workflow comes in
-        Phase 3.
+      {/* Admin Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatTile
+          label="Registered Users"
+          value={users.length}
+          subtext="Faculty, Reviewers, Administrators"
+          icon={Icons.Users}
+        />
+        <StatTile
+          label="Appraisal Cycles"
+          value={cycles.length}
+          subtext={`${cycles.filter(c => c.status === 'open').length} Active Open Cycle`}
+          icon={Icons.Schedule}
+        />
+        <StatTile
+          label="Active Cycle Status"
+          value={status?.open_cycle ? "OPEN" : "CLOSED"}
+          subtext={status?.open_cycle?.name || "No open cycle"}
+          icon={Icons.Appraisal}
+        />
       </div>
 
-      {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
-
-      <section className="mt-8 grid gap-4 md:grid-cols-4">
-        <StatCard label="Total users" value={status?.users ?? "—"} />
-        <StatCard
-          label="Faculty profiles"
-          value={status?.faculty_profiles ?? "—"}
-        />
-        <StatCard label="Cycles" value={status?.cycles ?? "—"} tone="accent" />
-        <StatCard label="Phase" value={status?.phase ?? "—"} tone="accent" />
-      </section>
-
-      <section className="mt-8 grid gap-4 md:grid-cols-2">
-        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="font-semibold text-ink">Storage &amp; compute</h2>
-          <dl className="mt-3 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-slate-500">Storage backend</dt>
-              <dd className="font-medium">{status?.storage_backend ?? "—"}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-500">MinIO endpoint</dt>
-              <dd className="font-medium">{status?.minio_endpoint ?? "—"}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-500">LLM provider</dt>
-              <dd className="font-medium">{status?.llm_provider ?? "none"}</dd>
-            </div>
-          </dl>
-        </article>
-        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="font-semibold text-ink">Secrets</h2>
-          <p className="mt-3 text-sm text-slate-500">
-            No secrets are exposed by this endpoint. Configure via{" "}
-            <code>.env</code>.
-          </p>
-        </article>
-      </section>
-
-      <section className="mt-8">
-        <h2 className="font-semibold text-ink">Users</h2>
-        <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-500">
-              <tr>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2">Roles</th>
-                <th className="px-4 py-2">Active</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {users.map((u) => (
-                <tr key={u.id}>
-                  <td className="px-4 py-2">{u.email}</td>
-                  <td className="px-4 py-2">
-                    {u.roles.map((r) => (
-                      <span
-                        key={r}
-                        className="mr-1 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs"
-                      >
-                        {r}
-                      </span>
-                    ))}
-                  </td>
-                  <td className="px-4 py-2">{u.is_active ? "yes" : "no"}</td>
-                </tr>
-              ))}
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan="3" className="px-4 py-4 text-slate-400">
-                    No users.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="mt-8 pb-10">
-        <div className="flex items-start justify-between gap-4">
-          <h2 className="font-semibold text-ink">Appraisal cycles</h2>
+      {/* Cycle Management Section */}
+      <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DCE5E1] pb-4">
+          <div>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#73817C]">Appraisal Cycle Administration</span>
+            <h3 className="text-lg font-bold text-[#192522]">Cycle Control</h3>
+          </div>
           {!creating ? (
             <button
-              onClick={() => {
-                setCreating(true);
-                setError("");
-              }}
-              className="rounded bg-accent px-3 py-1.5 text-sm font-semibold text-white"
+              onClick={() => setCreating(true)}
+              className="h-9 px-4 rounded bg-[#194537] text-white text-xs font-semibold hover:bg-[#194537]/90"
             >
-              Create cycle
+              + Create New Cycle
             </button>
           ) : (
             <button
-              onClick={() => {
-                setCreating(false);
-                setError("");
-              }}
-              className="text-sm underline"
+              onClick={() => setCreating(false)}
+              className="h-9 px-3 rounded border border-[#DCE5E1] text-xs font-semibold text-[#53635E]"
             >
-              Cancel
+              Cancel Create
             </button>
           )}
         </div>
-        {creating ? (
-          <CycleForm onSubmit={handleCreate} onCancel={() => setCreating(false)} />
-        ) : null}
-        <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-500">
+
+        {creating && <CycleForm onSubmit={handleCreate} onCancel={() => setCreating(false)} />}
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-[#53635E]">
+            <thead className="bg-[#F8FAF9] font-semibold text-[#73817C] border-b border-[#DCE5E1]">
               <tr>
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Academic year</th>
-                <th className="px-4 py-2">Start</th>
-                <th className="px-4 py-2">End</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2 text-right">Actions</th>
+                <th className="py-3 px-4">Cycle Name</th>
+                <th className="py-3 px-4">Academic Year</th>
+                <th className="py-3 px-4">Start Date</th>
+                <th className="py-3 px-4">End Date</th>
+                <th className="py-3 px-4 text-center">Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#DCE5E1]">
               {cycles.map((c) => (
-                <tr key={c.id}>
-                  <td className="px-4 py-2">{c.name}</td>
-                  <td className="px-4 py-2">{c.academic_year}</td>
-                  <td className="px-4 py-2">{c.start_date ?? "—"}</td>
-                  <td className="px-4 py-2">{c.end_date ?? "—"}</td>
-                  <td className="px-4 py-2">
-                    <StatusPill status={c.status} />
+                <tr key={c.id} className="hover:bg-[#F8FAF9]">
+                  <td className="py-3 px-4 font-bold text-[#192522]">{c.name}</td>
+                  <td className="py-3 px-4">{c.academic_year}</td>
+                  <td className="py-3 px-4">{c.start_date || c.starts_on || "—"}</td>
+                  <td className="py-3 px-4">{c.end_date || c.ends_on || "—"}</td>
+                  <td className="py-3 px-4 text-center">
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full font-semibold ${
+                        c.status === "open"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : c.status === "closed"
+                          ? "bg-slate-100 text-slate-700"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {c.status.toUpperCase()}
+                    </span>
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="py-3 px-4 text-right">
                     {c.status !== "open" ? (
                       <button
-                        onClick={() => handleOpen(c.id)}
                         disabled={busy === c.id}
-                        className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 disabled:opacity-50"
+                        onClick={() => handleOpenCycle(c.id)}
+                        className="px-3 py-1 rounded bg-[#194537] text-white font-semibold hover:bg-[#194537]/90 disabled:opacity-50"
                       >
-                        {busy === c.id ? "Opening…" : "Open"}
+                        Open Cycle
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleClose(c.id)}
                         disabled={busy === c.id}
-                        className="rounded border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 disabled:opacity-50"
+                        onClick={() => handleCloseCycle(c.id)}
+                        className="px-3 py-1 rounded border border-red-300 bg-red-50 text-red-700 font-semibold hover:bg-red-100 disabled:opacity-50"
                       >
-                        {busy === c.id ? "Closing…" : "Close"}
+                        Close Cycle
                       </button>
                     )}
                   </td>
                 </tr>
               ))}
-              {cycles.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="px-4 py-8 text-center text-slate-400"
-                  >
-                    No cycles yet. Click <strong>Create cycle</strong> above to
-                    get started.
-                  </td>
-                </tr>
-              ) : null}
             </tbody>
           </table>
         </div>
-      </section>
-    </main>
+      </div>
+
+      {/* User Accounts Section */}
+      <div className="bg-white rounded-lg border border-[#DCE5E1] p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="border-b border-[#DCE5E1] pb-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#73817C]">User Management</span>
+          <h3 className="text-lg font-bold text-[#192522]">Registered User Accounts ({users.length})</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-[#53635E]">
+            <thead className="bg-[#F8FAF9] font-semibold text-[#73817C] border-b border-[#DCE5E1]">
+              <tr>
+                <th className="py-3 px-4">User Email</th>
+                <th className="py-3 px-4">Assigned Roles</th>
+                <th className="py-3 px-4 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#DCE5E1]">
+              {users.map((u) => (
+                <tr key={u.id} className="hover:bg-[#F8FAF9]">
+                  <td className="py-3 px-4 font-semibold text-[#192522]">{u.email}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex flex-wrap gap-1">
+                      {u.roles?.map((r) => (
+                        <span key={r} className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium capitalize">
+                          {r}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full font-semibold ${u.is_active ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
+                      {u.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Agentic SDLC Factory Panel */}
+      <SDLCFactorySection />
+
+      {/* Cloud Operations Diagnostic Panel */}
+      <CloudOpsSection />
+    </AppLayout>
   );
 }

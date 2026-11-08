@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, JSON, String
+from sqlalchemy import BigInteger, DateTime, ForeignKey, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, PortableUUID
@@ -34,3 +34,8 @@ class AuditLog(Base):
     after: Mapped[Any] = mapped_column(JSON, nullable=True)
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+
+    # SEC-06 Integrity and Tamper Protection
+    sequence_number: Mapped[int | None] = mapped_column(BigInteger, unique=True, index=True, nullable=True)
+    prev_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    record_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)

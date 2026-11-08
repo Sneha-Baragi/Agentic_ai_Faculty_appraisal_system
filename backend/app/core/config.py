@@ -1,12 +1,13 @@
 from functools import lru_cache
 
-from pydantic import AliasChoices, Field
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
+    model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore", populate_by_name=True)
 
+    app_env: str = Field(default="development", validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"))
     database_url: str = "sqlite:///./test.db"
     jwt_secret: str = Field(
         default="change-me-phase1-dev-secret",
@@ -17,9 +18,21 @@ class Settings(BaseSettings):
         default=60,
         validation_alias=AliasChoices("ACCESS_TOKEN_EXPIRE_MINUTES", "JWT_EXPIRE_MINUTES"),
     )
+
+    @model_validator(mode="after")
+    def validate_jwt_secret_safety(self) -> "Settings":
+        env = (self.app_env or "development").strip().lower()
+        if env in {"production", "prod"}:
+            if self.jwt_secret in {"change-me-phase1-dev-secret", "insecure-phase2-dev-secret-change-in-env"}:
+                raise ValueError("Default development JWT secret cannot be used in production.")
+            if len(self.jwt_secret.encode("utf-8")) < 32:
+                raise ValueError("Unsafe JWT_SECRET: production secret must be at least 32 bytes (256 bits) for HS256.")
+        return self
+
     llm_provider: str = "none"
     llm_api_key: str = ""
     llm_model: str = ""
+    serpapi_api_key: str = Field(default="", validation_alias="SERPAPI_API_KEY")
     max_heal_attempts: int = 3
     cors_origins: str = "http://localhost:5173"
     seed_admin_email: str = "admin@demo.local"

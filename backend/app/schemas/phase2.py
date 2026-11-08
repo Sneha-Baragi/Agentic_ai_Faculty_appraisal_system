@@ -2,7 +2,7 @@ from datetime import date, datetime, time
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class TeachingRequirementOut(BaseModel):
@@ -96,6 +96,21 @@ class ProjectTeamOut(BaseModel):
     status: str
     members: list[ProjectTeamMemberSchema] = Field(default_factory=list)
     created_at: datetime
+
+
+class AdministrativeResponsibilityCreate(BaseModel):
+    role: str = Field(min_length=1, max_length=200)
+    organizational_unit: Optional[str] = Field(default=None, max_length=300)
+    description: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    evidence_reference: Optional[str] = Field(default=None, max_length=1000)
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValueError("end_date must be on or after start_date")
+        return self
 
 
 class ResearchPaperRequirementOut(BaseModel):

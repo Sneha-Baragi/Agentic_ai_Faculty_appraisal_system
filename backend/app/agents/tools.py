@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import get_settings
 from app.models import AppraisalCycle, AppraisalReport, AuditLog, Evidence, FacultyProfile, FacultyAppraisalRun, User
 from app.scoring.engine import calculate_score, load_demo_rubric
 from app.services.activities import activity_to_dict, list_activities
@@ -13,6 +14,7 @@ from app.services.appraisals import latest_report, latest_score
 from app.services.cycles import get_open_cycle
 from app.services.evidence import EvidenceService, evidence_to_dict
 from app.services.feedback import feedback_to_dict, list_student_feedback
+from app.services.google_scholar import GoogleScholarService
 from app.services.scoring_map import to_score_inputs
 
 
@@ -141,6 +143,18 @@ def read_teaching_records_tool(db: Session, user: User, request: RecordsInput) -
 
 def read_research_records_tool(db: Session, user: User, request: RecordsInput) -> ToolResult:
     return _read_activity_records(db, user, request, "research", "read_research_records")
+
+
+def read_google_scholar_profile_tool(db: Session, user: User, request: FacultyInput) -> ToolResult:
+    def operation() -> dict[str, Any]:
+        profile = _authorize_faculty(db, user, request.faculty_id)
+        settings = get_settings()
+        return GoogleScholarService(settings.serpapi_api_key).fetch_profile(
+            profile.google_scholar_id,
+            scholar_url=profile.google_scholar_url,
+        )
+
+    return _invoke(db, user, "read_google_scholar_profile", str(request.faculty_id), operation)
 
 
 def read_service_records_tool(db: Session, user: User, request: RecordsInput) -> ToolResult:
@@ -414,6 +428,7 @@ TOOL_REGISTRY = {
     "get_faculty_activities": get_faculty_activities_tool,
     "read_teaching_records": read_teaching_records_tool,
     "read_research_records": read_research_records_tool,
+    "read_google_scholar_profile": read_google_scholar_profile_tool,
     "read_service_records": read_service_records_tool,
     "read_student_feedback": read_student_feedback_tool,
     "compute_appraisal": compute_appraisal_tool,

@@ -63,6 +63,17 @@ export function updateProfile(patch) {
   });
 }
 
+export function fetchAdministrativeResponsibilities() {
+  return request("/api/v1/administrative-responsibilities");
+}
+
+export function createAdministrativeResponsibility(payload) {
+  return request("/api/v1/administrative-responsibilities", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function listCycles() {
   return request("/api/v1/cycles");
 }
@@ -263,6 +274,13 @@ export function markAttendance(payload) {
   });
 }
 
+export function syncAttendance(cycleId) {
+  const qs = cycleId ? `?cycle_id=${encodeURIComponent(cycleId)}` : "";
+  return request(`/api/v1/attendance/sync${qs}`, {
+    method: "POST",
+  });
+}
+
 export function fetchResearchPaperStatus() {
   return request("/api/v1/research-papers/me");
 }
@@ -291,3 +309,38 @@ export function deleteProjectTeam(teamId) {
   });
 }
 
+export function fetchCloudOpsDiagnostics() {
+  return request("/api/v1/admin/cloud-ops/diagnostics");
+}
+
+export function createSDLCTask(payload) {
+  return request("/api/v1/sdlc/tasks", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getSDLCTask(taskId) {
+  return request(`/api/v1/sdlc/tasks/${taskId}`);
+}
+
+export function approveSDLCTask(taskId, payload) {
+  return request(`/api/v1/sdlc/tasks/${taskId}/approval`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function executeSDLCTask(taskId, payload = {}) {
+  return request(`/api/v1/sdlc/tasks/${taskId}/execute`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function regenerateSDLCTask(taskId, payload = {}) {
+  return request(`/api/v1/sdlc/tasks/${taskId}/regenerate`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

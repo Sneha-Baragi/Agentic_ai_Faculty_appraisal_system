@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_faculty_profile
-from app.models import FacultyProfile
+from app.models import AuditLog, FacultyProfile
 from app.schemas.appraisal import ActivityCreate, ActivityUpdate
 from app.services.activities import (
     ActivityError,
@@ -49,6 +49,20 @@ def post_activity(
             activity_date=body.date,
             extras=body.extras,
         )
+        db.add(
+            AuditLog(
+                actor_id=profile.user_id,
+                action="activity_created",
+                entity_type="faculty_activity",
+                entity_id=str(activity.id),
+                before=None,
+                after={
+                    "category": activity.category,
+                    "activity_type": activity.activity_type,
+                    "title": activity.title,
+                },
+            )
+        )
         db.commit()
         db.refresh(activity)
         return activity_to_dict(activity)
@@ -67,6 +81,12 @@ def patch_activity(
     activity = get_owned_activity(db, activity_id=activity_id, faculty_id=profile.id)
     if activity is None:
         raise HTTPException(status_code=404, detail="Activity not found")
+    before_snapshot = {
+        "title": activity.title,
+        "description": activity.description,
+        "activity_type": activity.activity_type,
+        "activity_date": activity.activity_date.isoformat() if activity.activity_date else None,
+    }
     try:
         update_activity(
             db,
@@ -76,6 +96,22 @@ def patch_activity(
             activity_date=body.date,
             activity_type=body.activity_type,
             extras=body.extras,
+        )
+        after_snapshot = {
+            "title": activity.title,
+            "description": activity.description,
+            "activity_type": activity.activity_type,
+            "activity_date": activity.activity_date.isoformat() if activity.activity_date else None,
+        }
+        db.add(
+            AuditLog(
+                actor_id=profile.user_id,
+                action="activity_updated",
+                entity_type="faculty_activity",
+                entity_id=str(activity.id),
+                before=before_snapshot,
+                after=after_snapshot,
+            )
         )
         db.commit()
         db.refresh(activity)
@@ -94,6 +130,21 @@ def remove_activity(
     activity = get_owned_activity(db, activity_id=activity_id, faculty_id=profile.id)
     if activity is None:
         raise HTTPException(status_code=404, detail="Activity not found")
+    before_snapshot = {
+        "category": activity.category,
+        "activity_type": activity.activity_type,
+        "title": activity.title,
+    }
     delete_activity(db, activity=activity)
+    db.add(
+        AuditLog(
+            actor_id=profile.user_id,
+            action="activity_deleted",
+            entity_type="faculty_activity",
+            entity_id=activity_id,
+            before=before_snapshot,
+            after=None,
+        )
+    )
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

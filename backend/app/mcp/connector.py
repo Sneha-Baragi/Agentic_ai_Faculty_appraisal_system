@@ -23,6 +23,7 @@ _READ_ONLY_TOOL_NAMES = {
     "get_faculty_activities",
     "read_teaching_records",
     "read_research_records",
+    "read_google_scholar_profile",
     "read_service_records",
     "read_student_feedback",
     "get_evidence",

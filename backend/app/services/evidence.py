@@ -25,9 +25,9 @@ class EvidenceService:
         self.validator = EvidenceValidationService()
         self.extractor = DocumentExtractor()
 
-    def precheck(self, *, filename: str, content_type: str | None, size: int) -> ValidationOutcome:
+    def precheck(self, *, filename: str, content_type: str | None, size: int, data: bytes | None = None) -> ValidationOutcome:
         return self.validator.validate_upload_candidate(
-            filename=filename, content_type=content_type, size=size
+            filename=filename, content_type=content_type, size=size, data=data
         )
 
     def upload(
@@ -40,7 +40,7 @@ class EvidenceService:
         content_type: str | None,
         data: bytes,
     ) -> Evidence:
-        pre = self.precheck(filename=filename, content_type=content_type, size=len(data))
+        pre = self.precheck(filename=filename, content_type=content_type, size=len(data), data=data)
         if not pre.ok:
             raise EvidenceError("; ".join(pre.reasons))
         cycle = get_open_cycle(db)
@@ -71,10 +71,17 @@ class EvidenceService:
             validation_status="uploaded",
             extraction_status="pending",
         )
-        db.add(evidence)
-        db.flush()
-        self.validate_and_extract(db, evidence=evidence, faculty=faculty, activity=activity, data=data)
-        return evidence
+        try:
+            db.add(evidence)
+            db.flush()
+            self.validate_and_extract(db, evidence=evidence, faculty=faculty, activity=activity, data=data)
+            return evidence
+        except Exception as exc:
+            try:
+                self.storage.delete(key)
+            except Exception:
+                pass
+            raise exc
 
     def validate_and_extract(
         self,
@@ -98,6 +105,7 @@ class EvidenceService:
             activity_faculty_id=activity.faculty_id,
             authenticated_faculty_id=faculty.id,
             cycle_status=cycle.status if cycle else None,
+            data=data,
         )
         db.add(
             EvidenceValidation(

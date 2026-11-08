@@ -128,3 +128,30 @@ def login(client: TestClient, email: str, password: str = "password-123") -> str
     r = client.post("/api/v1/auth/login", json={"email": email, "password": password})
     assert r.status_code == 200, r.text
     return r.json()["access_token"]
+
+
+@pytest.fixture(autouse=True)
+def _isolate_checkpointer_storage(request, monkeypatch):
+    """Isolates standard unit tests with a fresh MemorySaver.
+
+    Skipped for tests explicitly marked with @pytest.mark.no_checkpointer_isolation
+    to allow direct testing of checkpointer configuration and initialization.
+    Guaranteed restoration of original checkpointer in finally block.
+    """
+    if request.node.get_closest_marker("no_checkpointer_isolation"):
+        yield
+        return
+
+    import app.main as main_module
+    from app.agents.graph import checkpointed_graph
+    from langgraph.checkpoint.memory import MemorySaver
+
+    original = checkpointed_graph.checkpointer
+    test_saver = MemorySaver()
+    checkpointed_graph.checkpointer = test_saver
+    monkeypatch.setattr(main_module, "init_checkpointer", lambda: None)
+    monkeypatch.setattr(main_module, "close_checkpointer", lambda: None)
+    try:
+        yield test_saver
+    finally:
+        checkpointed_graph.checkpointer = original

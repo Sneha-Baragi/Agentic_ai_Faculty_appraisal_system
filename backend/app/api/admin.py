@@ -6,8 +6,13 @@ from app.api.deps import get_db, require_roles
 from app.core.config import get_settings
 from app.models import AppraisalCycle, FacultyProfile, User
 from app.schemas.appraisal import CycleCreate
-from app.services.constants import CYCLE_STATUSES
-from app.services.cycles import cycle_to_dict, get_open_cycle, new_cycle, touch_cycle
+from app.services.cycles import (
+    close_cycle_service,
+    create_cycle_service,
+    cycle_to_dict,
+    open_cycle_service,
+)
+from app.services.audit import verify_audit_log_chain
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 ADMIN = require_roles("admin")
@@ -39,23 +44,15 @@ def create_cycle(
     db: Session = Depends(get_db),
     _admin: User = Depends(ADMIN),
 ) -> dict:
-    if body.status not in CYCLE_STATUSES:
-        raise HTTPException(status_code=400, detail="Invalid cycle status")
-    if body.status == "open":
-        existing = get_open_cycle(db)
-        if existing is not None:
-            existing.status = "closed"
-            touch_cycle(existing)
-    cycle = new_cycle(
+    cycle = create_cycle_service(
+        db,
+        actor=_admin,
         name=body.name,
         academic_year=body.academic_year,
         start_date=body.start_date,
         end_date=body.end_date,
         status=body.status,
     )
-    db.add(cycle)
-    db.commit()
-    db.refresh(cycle)
     return cycle_to_dict(cycle)
 
 
@@ -65,17 +62,7 @@ def open_cycle(
     db: Session = Depends(get_db),
     _admin: User = Depends(ADMIN),
 ) -> dict:
-    cycle = db.scalar(select(AppraisalCycle).where(AppraisalCycle.id == cycle_id))
-    if cycle is None:
-        raise HTTPException(status_code=404, detail="Cycle not found")
-    existing = get_open_cycle(db)
-    if existing is not None and existing.id != cycle.id:
-        existing.status = "closed"
-        touch_cycle(existing)
-    cycle.status = "open"
-    touch_cycle(cycle)
-    db.commit()
-    db.refresh(cycle)
+    cycle = open_cycle_service(db, actor=_admin, cycle_id=cycle_id)
     return cycle_to_dict(cycle)
 
 
@@ -85,13 +72,7 @@ def close_cycle(
     db: Session = Depends(get_db),
     _admin: User = Depends(ADMIN),
 ) -> dict:
-    cycle = db.scalar(select(AppraisalCycle).where(AppraisalCycle.id == cycle_id))
-    if cycle is None:
-        raise HTTPException(status_code=404, detail="Cycle not found")
-    cycle.status = "closed"
-    touch_cycle(cycle)
-    db.commit()
-    db.refresh(cycle)
+    cycle = close_cycle_service(db, actor=_admin, cycle_id=cycle_id)
     return cycle_to_dict(cycle)
 
 
@@ -111,3 +92,12 @@ def system_status(db: Session = Depends(get_db), _admin: User = Depends(ADMIN)) 
         "llm_provider": settings.llm_provider,
         "disclaimer": "DEMO/TEST WEIGHTAGES — NOT OFFICIAL UGC",
     }
+
+
+@router.get("/audit/verify")
+def verify_audit_logs(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(ADMIN),
+) -> dict:
+    """Read-only verification of the audit log cryptographic hash chain."""
+    return verify_audit_log_chain(db)

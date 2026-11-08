@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { fetchAttendance, fetchTimetable, markAttendance } from "../api/client.js";
+import { fetchAttendance, fetchTimetable, markAttendance, syncAttendance } from "../api/client.js";
 
-export function AttendanceSection({ onAttendanceMarked }) {
+export function AttendanceSection({ onAttendanceMarked, cycleId }) {
   const [timetable, setTimetable] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
   const [selectedEntry, setSelectedEntry] = useState("");
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().substring(0, 10));
   const [status, setStatus] = useState("present");
@@ -51,37 +53,77 @@ export function AttendanceSection({ onAttendanceMarked }) {
     }
   };
 
+  const handleSync = async () => {
+    try {
+      setSyncing(true);
+      setError("");
+      setSyncMsg("");
+      const res = await syncAttendance(cycleId);
+      setSyncMsg(res.message || `Synchronized ${res.synchronized_hours} hours to course delivery.`);
+      await loadData();
+      if (onAttendanceMarked) onAttendanceMarked();
+    } catch (err) {
+      setError(err.message || "Failed to synchronize attendance");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const presentCount = attendance.filter((a) => a.status === "present").length;
   const absentCount = attendance.filter((a) => a.status === "absent").length;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-6">
-      <div className="flex items-center justify-between">
+    <section className="ui-card space-y-5 p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Attendance Tracking</span>
-          <h3 className="text-xl font-bold text-slate-900">Class Attendance</h3>
+          <p className="ui-eyebrow">Attendance tracking</p>
+          <h3 className="mt-1 text-lg font-semibold text-ink">Class attendance</h3>
         </div>
-        <div className="flex space-x-3 text-xs">
-          <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-emerald-700 font-semibold border border-emerald-200">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="ui-status-success">
             Attended: {presentCount}
           </span>
-          <span className="rounded-md bg-rose-50 px-2.5 py-1 text-rose-700 font-semibold border border-rose-200">
+          <span className="ui-status-danger">
             Absent: {absentCount}
           </span>
+          <button
+            type="button"
+            onClick={handleSync}
+            disabled={syncing || presentCount === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#194537] text-white font-semibold hover:bg-[#194537]/90 disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            {syncing ? "Syncing…" : "Sync to Course Delivery"}
+          </button>
         </div>
       </div>
 
-      {error && <div className="rounded bg-red-50 p-3 text-xs text-red-700">{error}</div>}
-      {success && <div className="rounded bg-emerald-50 p-3 text-xs text-emerald-700">{success}</div>}
+      {error && <div role="alert" className="rounded-md border border-danger/20 bg-danger/5 p-3 text-sm text-danger">{error}</div>}
+      {success && <div role="status" className="rounded-md border border-success/20 bg-success/5 p-3 text-sm text-success">{success}</div>}
+      {syncMsg && (
+        <div role="status" className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+          <span className="font-semibold">Course Delivery Sync:</span> {syncMsg}
+        </div>
+      )}
+
+      {/* Attendance & Scoring Integration Policy Notice */}
+      <div className="rounded-md border border-[#DCE5E1] bg-[#F8FAF9] p-3 text-xs text-[#53635E] space-y-1">
+        <span className="font-semibold text-[#192522]">Course Delivery & Attendance Integration Rules:</span>
+        <ul className="list-disc list-inside space-y-0.5 text-[11px] text-[#53635E]">
+          <li>Only validated completed sessions marked <strong>Present</strong> within the current appraisal cycle are eligible (0.50 pts/hr up to rubric cap).</li>
+          <li>Timetable schedule slots alone do not confer points without validated attendance. Absent or cancelled sessions earn 0 points.</li>
+          <li><strong>Double-counting prevention:</strong> Courses already submitted as manual course delivery activities (e.g. CSAI101) are automatically skipped.</li>
+          <li><strong>Idempotent:</strong> Subsequent synchronizations update verified hours in-place without duplicating activity records.</li>
+        </ul>
+      </div>
 
       {/* Attendance Form */}
-      <form onSubmit={handleMark} className="rounded-lg bg-slate-50 p-4 border border-slate-200 flex flex-wrap items-end gap-3">
+      <form onSubmit={handleMark} className="ui-card-subtle flex flex-wrap items-end gap-3 p-4">
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-medium text-slate-700 mb-1">Select Scheduled Class</label>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">Select scheduled class</label>
           <select
             value={selectedEntry}
             onChange={(e) => setSelectedEntry(e.target.value)}
-            className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-slate-800"
+            className="ui-input min-h-10"
           >
             {timetable.length === 0 ? (
               <option value="">No timetable entries found</option>
@@ -96,21 +138,21 @@ export function AttendanceSection({ onAttendanceMarked }) {
         </div>
 
         <div className="w-36">
-          <label className="block text-xs font-medium text-slate-700 mb-1">Date</label>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">Date</label>
           <input
             type="date"
             value={attendanceDate}
             onChange={(e) => setAttendanceDate(e.target.value)}
-            className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-slate-800"
+            className="ui-input min-h-10"
           />
         </div>
 
         <div className="w-32">
-          <label className="block text-xs font-medium text-slate-700 mb-1">Status</label>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">Status</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-slate-800"
+            className="ui-input min-h-10"
           >
             <option value="present">Present</option>
             <option value="absent">Absent</option>
@@ -120,7 +162,7 @@ export function AttendanceSection({ onAttendanceMarked }) {
         <button
           type="submit"
           disabled={timetable.length === 0}
-          className="rounded bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition"
+          className="ui-button-primary"
         >
           Mark Attendance
         </button>
@@ -128,15 +170,15 @@ export function AttendanceSection({ onAttendanceMarked }) {
 
       {/* Attendance History */}
       <div>
-        <h4 className="text-sm font-bold text-slate-800 mb-2">Recent Attendance History</h4>
+        <h4 className="mb-2 text-sm font-semibold text-ink">Recent attendance history</h4>
         {loading ? (
-          <div className="text-xs text-slate-500 py-2">Loading attendance history...</div>
+          <div className="py-2 text-sm text-muted" aria-live="polite">Loading attendance history…</div>
         ) : attendance.length === 0 ? (
-          <div className="text-xs text-slate-500 py-2">No attendance records found yet.</div>
+          <div className="py-2 text-sm text-muted">No attendance records found yet.</div>
         ) : (
           <div className="overflow-x-auto max-h-48">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-100 font-semibold uppercase text-slate-500 sticky top-0">
+            <table className="w-full min-w-[620px] text-left text-sm text-text-secondary">
+              <thead className="sticky top-0 bg-subtle text-xs font-semibold text-muted">
                 <tr>
                   <th className="py-2 px-3">Date</th>
                   <th className="py-2 px-3">Course</th>
@@ -145,23 +187,23 @@ export function AttendanceSection({ onAttendanceMarked }) {
                   <th className="py-2 px-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {attendance.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-medium text-slate-800">
+                  <tr key={rec.id} className="hover:bg-subtle">
+                    <td className="px-3 py-2.5 font-medium text-ink">
                       {new Date(rec.attended_at).toLocaleDateString()}
                     </td>
-                    <td className="py-2 px-3 font-semibold text-slate-900">{rec.course_code || "Class"}</td>
-                    <td className="py-2 px-3">{rec.section || "—"}</td>
-                    <td className="py-2 px-3 text-slate-700">
+                    <td className="px-3 py-2.5 font-semibold text-ink">{rec.course_code || "Class"}</td>
+                    <td className="px-3 py-2.5">{rec.section || "—"}</td>
+                    <td className="px-3 py-2.5 text-text-secondary">
                       {rec.start_time?.substring(0, 5)} - {rec.end_time?.substring(0, 5)}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="px-3 py-2.5">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                           rec.status === "present"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-rose-100 text-rose-800"
+                            ? "bg-success/10 text-success"
+                            : "bg-danger/10 text-danger"
                         }`}
                       >
                         {rec.status.toUpperCase()}
@@ -174,6 +216,6 @@ export function AttendanceSection({ onAttendanceMarked }) {
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }

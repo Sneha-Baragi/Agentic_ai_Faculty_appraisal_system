@@ -9,6 +9,7 @@ EXPECTED_TOOL_KEYS = {
     "get_faculty_activities",
     "read_teaching_records",
     "read_research_records",
+    "read_google_scholar_profile",
     "read_service_records",
     "read_student_feedback",
     "get_evidence",
@@ -35,7 +36,7 @@ def test_exposed_tool_set():
     tools = get_mcp_tools()
 
     assert isinstance(tools, dict)
-    assert len(tools) == 15
+    assert len(tools) == 16
     assert set(tools.keys()) == EXPECTED_TOOL_KEYS
 
 

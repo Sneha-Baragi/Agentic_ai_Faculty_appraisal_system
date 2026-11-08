@@ -50,6 +50,8 @@ class FacultyProfile(Base):
     designation: Mapped[str] = mapped_column(String(120), nullable=False)
     institution: Mapped[str | None] = mapped_column(String(200), nullable=True)
     joining_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    google_scholar_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    google_scholar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     confidentiality_scope: Mapped[str] = mapped_column(String(50), default="self", nullable=False)
 
     user: Mapped[User] = relationship(back_populates="faculty_profile")

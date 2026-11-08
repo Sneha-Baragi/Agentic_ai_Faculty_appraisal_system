@@ -5,6 +5,7 @@ from app.scoring.engine import (
     calculate_score,
     load_demo_rubric,
 )
+from app.services.scoring_map import to_score_inputs
 
 
 def test_demo_rubric_is_labelled() -> None:
@@ -57,6 +58,27 @@ def test_missing_evidence_rejected() -> None:
         assert False, "expected ScoringError"
     except ScoringError as exc:
         assert "no supporting evidence" in str(exc)
+
+
+def test_valid_admin_activity_matches_rubric_rule() -> None:
+    activities = [ActivityScoreInput("a1", "administrative", "coordinator", ("e1",), 1)]
+    result = calculate_score(activities)
+    assert result.category_totals["administrative"] == 2.0
+    assert result.total == 2.0
+
+
+def test_unsupported_scholar_metrics_are_not_scored() -> None:
+    rubric = load_demo_rubric()
+    for category in rubric["categories"].values():
+        for code in category["items"]:
+            assert code not in {"h_index", "i10_index", "total_citations", "citation_count"}
+
+    inputs = to_score_inputs([
+        {"id": "scholar-1", "activity_type": "scholar_publications", "evidence_ids": ["e1"]},
+        {"id": "admin-1", "activity_type": "administrative_responsibility", "evidence_ids": ["e2"]},
+    ])
+    assert inputs == []
+    assert calculate_score([]).total == 0.0
 
 
 def test_engine_ignores_fabricated_total_by_not_accepting_one() -> None:

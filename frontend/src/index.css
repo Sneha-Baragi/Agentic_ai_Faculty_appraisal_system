@@ -5,3 +5,72 @@
 body {
   margin: 0;
 }
+
+@layer base {
+  body {
+    @apply min-h-screen bg-paper font-sans text-ink antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid #245b4a;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .ui-card {
+    @apply min-w-0 rounded-lg border border-border bg-surface;
+    box-shadow: 0 1px 2px rgb(25 37 34 / 5%);
+  }
+
+  .ui-card-subtle {
+    @apply min-w-0 rounded-md border border-border bg-subtle;
+  }
+
+  .ui-eyebrow {
+    @apply text-xs font-semibold tracking-wide text-muted;
+  }
+
+  .ui-input {
+    @apply min-h-10 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:bg-subtle disabled:text-muted;
+  }
+
+  .ui-button-primary {
+    @apply inline-flex min-h-10 items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-deep focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .ui-button-secondary {
+    @apply inline-flex min-h-10 items-center justify-center rounded-md border border-border bg-surface px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-subtle focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .ui-button-danger {
+    @apply inline-flex min-h-10 items-center justify-center rounded-md border border-danger/30 bg-surface px-4 py-2 text-sm font-semibold text-danger transition-colors hover:bg-danger/5 focus-visible:outline-danger disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .ui-button-quiet {
+    @apply inline-flex min-h-9 items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-subtle hover:text-ink focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .ui-status-success {
+    @apply inline-flex items-center rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success;
+  }
+
+  .ui-status-pending {
+    @apply inline-flex items-center rounded-full bg-pending/10 px-2.5 py-1 text-xs font-semibold text-pending;
+  }
+
+  .ui-status-danger {
+    @apply inline-flex items-center rounded-full bg-danger/10 px-2.5 py-1 text-xs font-semibold text-danger;
+  }
+
+  .ui-status-neutral {
+    @apply inline-flex items-center rounded-full bg-neutral/10 px-2.5 py-1 text-xs font-semibold text-neutral;
+  }
+}

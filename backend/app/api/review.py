@@ -46,7 +46,66 @@ class RollbackRequest(BaseModel):
     reason: str
 
 
-def _review_run(db: Session, faculty_id: str) -> tuple[FacultyAppraisalRun, AppraisalReport]:
+PROHIBITED_SELF_REVIEW_ACTIONS = {
+    "approve",
+    "reject",
+    "request_changes",
+    "edit",
+    "override",
+    "rollback",
+    "publish",
+}
+
+
+def _check_reviewer_scope(
+    db: Session,
+    reviewer: User,
+    target_faculty: FacultyProfile,
+    action: str = "view",
+) -> None:
+    reviewer_profile = reviewer.faculty_profile
+    if reviewer_profile is None:
+        reviewer_profile = db.scalar(
+            select(FacultyProfile).where(FacultyProfile.user_id == reviewer.id)
+        )
+
+    # SEC-08: Separation of Duties — enforce strict backend prohibition
+    # against reviewing, approving, modifying, overriding, rolling back,
+    # or publishing one's own appraisal.
+    is_self = (
+        bool(target_faculty.user_id and reviewer.id and str(target_faculty.user_id) == str(reviewer.id))
+        or bool(reviewer_profile is not None and str(target_faculty.id) == str(reviewer_profile.id))
+    )
+    if is_self and (action or "").strip().lower() in PROHIBITED_SELF_REVIEW_ACTIONS:
+        raise HTTPException(
+            status_code=403,
+            detail="Separation of duties violation: reviewers are prohibited from reviewing, approving, or modifying their own appraisal.",
+        )
+
+    role_names = {r.name.lower() for r in reviewer.roles}
+    if role_names.intersection({"admin", "dean", "iqac", "committee"}):
+        return
+
+    if "hod" in role_names:
+        if reviewer_profile and reviewer_profile.department:
+            if reviewer_profile.department != target_faculty.department:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"HOD from department '{reviewer_profile.department}' cannot access faculty in department '{target_faculty.department}'",
+                )
+
+
+def _review_run(
+    db: Session,
+    faculty_id: str,
+    reviewer: User | None = None,
+    action: str = "view",
+) -> tuple[FacultyAppraisalRun, AppraisalReport]:
+    profile = db.scalar(select(FacultyProfile).where(FacultyProfile.id == faculty_id))
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Faculty not found")
+    if reviewer is not None:
+        _check_reviewer_scope(db, reviewer, profile, action=action)
     cycle = get_open_cycle(db)
     if cycle is None:
         raise HTTPException(status_code=404, detail="No open appraisal cycle")
@@ -97,15 +156,15 @@ def _new_report_version(db: Session, run: FacultyAppraisalRun, report: Appraisal
 
 
 @router.get("/faculty/{faculty_id}/reports/history")
-def report_history(faculty_id: str, db: Session = Depends(get_db), _user: User = Depends(REVIEWER)) -> list[dict]:
-    run, _ = _review_run(db, faculty_id)
+def report_history(faculty_id: str, db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> list[dict]:
+    run, _ = _review_run(db, faculty_id, reviewer=reviewer, action="view_history")
     reports = db.scalars(select(AppraisalReport).where(AppraisalReport.run_id == run.id).order_by(AppraisalReport.version_number.desc())).all()
     return [{"id": str(item.id), "version_number": item.version_number, "status": item.status, "rating_recommendation": item.rating_recommendation, "is_current": item.id == run.current_version_id, "published_at": item.published_at.isoformat() if item.published_at else None} for item in reports]
 
 
 @router.patch("/faculty/{faculty_id}/report/edit")
 def edit_report(faculty_id: str, request: ReportEditRequest, db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> dict:
-    run, report = _review_run(db, faculty_id)
+    run, report = _review_run(db, faculty_id, reviewer=reviewer, action="edit")
     changes = {key: value for key, value in {"summary_md": request.summary_md, "rating_recommendation": request.rating_recommendation}.items() if value is not None}
     if not changes:
         raise HTTPException(status_code=422, detail="At least one report field is required")
@@ -118,7 +177,7 @@ def edit_report(faculty_id: str, request: ReportEditRequest, db: Session = Depen
 def override_report(faculty_id: str, request: ReportOverrideRequest, db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> dict:
     if not request.reason.strip():
         raise HTTPException(status_code=422, detail="Override reason is required")
-    run, report = _review_run(db, faculty_id)
+    run, report = _review_run(db, faculty_id, reviewer=reviewer, action="override")
     score = deepcopy((report.report_json or {}).get("score", {}))
     if request.total_score is not None:
         score["total"] = request.total_score
@@ -135,7 +194,7 @@ def override_report(faculty_id: str, request: ReportOverrideRequest, db: Session
 def rollback_report(faculty_id: str, request: RollbackRequest, db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> dict:
     if not request.reason.strip():
         raise HTTPException(status_code=422, detail="Rollback reason is required")
-    run, current = _review_run(db, faculty_id)
+    run, current = _review_run(db, faculty_id, reviewer=reviewer, action="rollback")
     target = db.scalar(select(AppraisalReport).where(AppraisalReport.id == request.version_id, AppraisalReport.run_id == run.id))
     if target is None:
         raise HTTPException(status_code=404, detail="Report version not found")
@@ -146,7 +205,7 @@ def rollback_report(faculty_id: str, request: RollbackRequest, db: Session = Dep
 
 @router.post("/faculty/{faculty_id}/report/publish")
 def publish_report(faculty_id: str, db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> dict:
-    run, report = _review_run(db, faculty_id)
+    run, report = _review_run(db, faculty_id, reviewer=reviewer, action="publish")
     if report.status == "published":
         return {"id": str(report.id), "version_number": report.version_number, "status": "published", "message": "Report is already published"}
     if _approval_status(run) != "approved":
@@ -228,6 +287,8 @@ def _decide(
             status_code=404,
             detail="Faculty not found",
         )
+
+    _check_reviewer_scope(db, reviewer, profile, action=action)
 
     run = db.scalar(
         select(FacultyAppraisalRun).where(
@@ -502,8 +563,18 @@ def request_appraisal_changes(faculty_id: str, request: ApprovalRequest, db: Ses
 
 
 @router.get("/faculty")
-def list_faculty(db: Session = Depends(get_db), _user: User = Depends(REVIEWER)) -> list[dict]:
+def list_faculty(db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> list[dict]:
     rows = list(db.scalars(select(FacultyProfile).options(selectinload(FacultyProfile.user))))
+    role_names = {r.name.lower() for r in reviewer.roles}
+    if not role_names.intersection({"admin", "dean", "iqac", "committee"}):
+        if "hod" in role_names:
+            reviewer_profile = reviewer.faculty_profile
+            if reviewer_profile is None:
+                reviewer_profile = db.scalar(
+                    select(FacultyProfile).where(FacultyProfile.user_id == reviewer.id)
+                )
+            if reviewer_profile and reviewer_profile.department:
+                rows = [p for p in rows if p.department == reviewer_profile.department]
     cycle = get_open_cycle(db)
     out = []
     for profile in rows:
@@ -524,10 +595,11 @@ def list_faculty(db: Session = Depends(get_db), _user: User = Depends(REVIEWER))
 
 
 @router.get("/faculty/{faculty_id}")
-def faculty_packet(faculty_id: str, db: Session = Depends(get_db), _user: User = Depends(REVIEWER)) -> dict:
+def faculty_packet(faculty_id: str, db: Session = Depends(get_db), reviewer: User = Depends(REVIEWER)) -> dict:
     profile = db.scalar(select(FacultyProfile).options(selectinload(FacultyProfile.user)).where(FacultyProfile.id == faculty_id))
     if profile is None:
         raise HTTPException(status_code=404, detail="Faculty not found")
+    _check_reviewer_scope(db, reviewer, profile, action="view_packet")
     cycle = get_open_cycle(db)
     activities = list(
         db.scalars(

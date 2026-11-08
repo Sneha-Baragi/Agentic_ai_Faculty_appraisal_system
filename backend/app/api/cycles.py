@@ -5,8 +5,11 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db, require_roles
 from app.models import AppraisalCycle, User
 from app.schemas.appraisal import CycleCreate, CycleOut
-from app.services.constants import CYCLE_STATUSES
-from app.services.cycles import cycle_to_dict, get_open_cycle, new_cycle, touch_cycle
+from app.services.cycles import (
+    create_cycle_service,
+    cycle_to_dict,
+    get_open_cycle,
+)
 
 router = APIRouter(prefix="/api/v1/cycles", tags=["cycles"])
 
@@ -31,21 +34,13 @@ def create_cycle(
     db: Session = Depends(get_db),
     _admin: User = Depends(require_roles("admin")),
 ) -> dict:
-    if body.status not in CYCLE_STATUSES:
-        raise HTTPException(status_code=400, detail="Invalid cycle status")
-    if body.status == "open":
-        existing = get_open_cycle(db)
-        if existing is not None:
-            existing.status = "closed"
-            touch_cycle(existing)
-    cycle = new_cycle(
+    cycle = create_cycle_service(
+        db,
+        actor=_admin,
         name=body.name,
         academic_year=body.academic_year,
         start_date=body.start_date,
         end_date=body.end_date,
         status=body.status,
     )
-    db.add(cycle)
-    db.commit()
-    db.refresh(cycle)
     return cycle_to_dict(cycle)
