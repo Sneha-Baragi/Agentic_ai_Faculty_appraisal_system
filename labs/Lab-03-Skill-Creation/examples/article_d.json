@@ -1,0 +1,8 @@
+{
+  "id": "article_d",
+  "title": "Zero-Overhead Forward Secrecy in Distributed Microservices",
+  "domain": "Cybersecurity / Distributed Cryptography",
+  "authors": "Security Protocol Engineering Working Group",
+  "content": "A post-quantum cryptographic handshake protocol guarantees zero-overhead forward secrecy for distributed microservices."
+}
+

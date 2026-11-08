@@ -1,0 +1,8 @@
+{
+  "id": "article_a",
+  "title": "Evaluating Factual Consistency in Retrieval-Augmented Generation",
+  "domain": "Artificial Intelligence / Natural Language Processing",
+  "authors": "AI Systems Evaluation Group",
+  "content": "Retrieval-Augmented Generation (RAG) reduces factual hallucination rates by 41% compared with a non-retrieval baseline. The evaluation was conducted using 200 held-out questions from a medical knowledge base. The evaluation was limited to a small, single-domain dataset, so the results may not generalize to other domains."
+}
+

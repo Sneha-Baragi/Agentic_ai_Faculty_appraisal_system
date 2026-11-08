@@ -1,0 +1,7 @@
+# Lab 3: Skill Creation - Research Summary Skill
+# Course: Agentic AI (26ECAC401)
+#
+# This lab is implemented entirely using Python's standard library.
+# No external third-party dependencies are required.
+# Python 3.10+ recommended.
+
