@@ -1,0 +1,7 @@
+# Lab 4: Memory and Retrieval – Project Memory
+# Course: Agentic AI (26ECAC401)
+#
+# This lab uses ONLY the Python Standard Library.
+# No external third-party dependencies are required.
+# Compatible with Python 3.8+.
+

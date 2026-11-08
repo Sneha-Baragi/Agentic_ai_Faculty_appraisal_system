@@ -1,0 +1,67 @@
+{
+  "base_workflow": {
+    "initial_decision": {
+      "topic": "database",
+      "fact": "we chose PostgreSQL",
+      "date": "2026-07-03",
+      "source": "memory",
+      "authorized_role": "team_lead"
+    },
+    "conflict_statement": {
+      "topic": "database",
+      "fact": "we're switching to SQLite",
+      "proposing_role": "member",
+      "expected_outcome": "conflict_detected",
+      "automatic_overwrite": false
+    },
+    "authorized_update": {
+      "topic": "database",
+      "fact": "we're switching to SQLite",
+      "date": "2026-07-10",
+      "authorized_role": "team_lead",
+      "expected_outcome": "memory_updated"
+    },
+    "unauthorized_update": {
+      "topic": "database",
+      "fact": "we're switching to MongoDB",
+      "unauthorized_role": "member",
+      "expected_outcome": "PermissionError"
+    }
+  },
+  "assignment_1_isolated_topics": [
+    {
+      "topic": "database",
+      "fact": "we chose PostgreSQL",
+      "date": "2026-07-03",
+      "source": "memory"
+    },
+    {
+      "topic": "hosting",
+      "fact": "we chose AWS ECS for container hosting",
+      "date": "2026-07-04",
+      "source": "memory"
+    },
+    {
+      "topic": "frontend",
+      "fact": "we chose Next.js with TypeScript",
+      "date": "2026-07-05",
+      "source": "memory"
+    }
+  ],
+  "assignment_2_staleness": {
+    "retention_threshold_days": 90,
+    "fresh_record": {
+      "topic": "frontend",
+      "fact": "we chose Next.js with TypeScript",
+      "date_offset_days": 10,
+      "expected_warning": null
+    },
+    "stale_record": {
+      "topic": "architecture",
+      "fact": "we chose monolithic architecture",
+      "date_offset_days": 180,
+      "expected_warning": "Warning: This decision is from 180 days ago and may be out of date."
+    }
+  }
+}
+
