@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0-illustrative-mock",
+  "disclaimer": "ILLUSTRATIVE EDUCATIONAL WEIGHTAGES ONLY. These weights demonstrate API score calculation in an agent graph and must not be represented as official institutional or UGC policy unless confirmed by university statute.",
+  "category_weights": {
+    "Research": 0.40,
+    "Teaching_Learning": 0.40,
+    "Administrative": 0.20
+  },
+  "category_caps": {
+    "Research": 100.0,
+    "Teaching_Learning": 100.0,
+    "Administrative": 100.0
+  },
+  "overall_scale_max": 100.0,
+  "minimum_verified_score_threshold": 40.0
+}

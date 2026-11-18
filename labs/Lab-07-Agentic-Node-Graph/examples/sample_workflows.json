@@ -1,0 +1,68 @@
+{
+  "scenario_a_success": {
+    "description": "Full successful end-to-end appraisal workflow with parallel collection, verified evidence, and HoD approval.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "consent": {
+      "research": true,
+      "teaching_learning": true,
+      "administrative": true
+    },
+    "reviewer": {
+      "id": "REV_HOD_001",
+      "role": "HoD",
+      "decision": "APPROVED",
+      "comments": "All claims verified against institutional records. Recommended for promotion."
+    },
+    "expected_status": "APPROVED_AND_PUBLISHED"
+  },
+  "scenario_b_missing_evidence": {
+    "description": "Workflow with an unverified claim lacking supporting evidence reference.",
+    "faculty_id": "FAC001",
+    "inject_unverified_activity": "RES_MISSING",
+    "expected_validation_status": "MISSING_EVIDENCE",
+    "expected_score_type": "PROVISIONAL",
+    "expected_status": "BLOCKED_ON_EXCEPTIONS"
+  },
+  "scenario_c_mismatched_evidence": {
+    "description": "Workflow where claimed evidence certificate belongs to another faculty member (FAC002).",
+    "faculty_id": "FAC001",
+    "inject_mismatched_activity": "RES_MISMATCH",
+    "expected_validation_status": "MISMATCHED_EVIDENCE",
+    "expected_status": "BLOCKED_ON_EXCEPTIONS"
+  },
+  "scenario_d_human_rejection": {
+    "description": "Workflow where reviewer exercises human oversight and rejects report for missing syllabus targets.",
+    "faculty_id": "FAC001",
+    "reviewer": {
+      "id": "REV_DEAN_001",
+      "role": "Dean",
+      "decision": "REJECTED",
+      "comments": "Teaching hours documentation does not meet minimum 120 contact hour requirement."
+    },
+    "expected_status": "REJECTED"
+  },
+  "scenario_e_consent_denied": {
+    "description": "Workflow where faculty denies consent for Research Data Collection.",
+    "faculty_id": "FAC001",
+    "consent": {
+      "research": false,
+      "teaching_learning": true,
+      "administrative": true
+    },
+    "expected_research_count": 0,
+    "expected_status": "CONSENT_DENIED_SKIPPED"
+  },
+  "scenario_f_unauthorized_reviewer": {
+    "description": "Workflow where approval is attempted by an unauthorized role (Student).",
+    "faculty_id": "FAC001",
+    "reviewer": {
+      "id": "REV_STU_999",
+      "role": "Student_Representative",
+      "decision": "APPROVED",
+      "comments": "Approved without faculty authorization."
+    },
+    "expected_status": "REJECTED"
+  }
+}

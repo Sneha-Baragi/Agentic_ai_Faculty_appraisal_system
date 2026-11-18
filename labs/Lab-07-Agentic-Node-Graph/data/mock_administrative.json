@@ -1,0 +1,41 @@
+[
+  {
+    "activity_id": "ADM_001",
+    "faculty_id": "FAC001",
+    "title": "Department NBA Accreditation Coordinator",
+    "category": "Administrative",
+    "sub_category": "Accreditation_Committee",
+    "period": "2025-2026",
+    "description": "Led departmental documentation, SAR preparation, and audit verification for Criterions 3 & 4",
+    "claimed_points": 20.0,
+    "source_system": "Office_of_the_HoD",
+    "evidence_ref": "EVID_ADM_001",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "ADM_002",
+    "faculty_id": "FAC001",
+    "title": "Faculty Advisor: Annual National Technical Symposium (TechKriti 2026)",
+    "category": "Administrative",
+    "sub_category": "Institutional_Event",
+    "period": "2025-2026",
+    "description": "Coordinated sponsorship, technical paper review tracks, and student organizing committee",
+    "claimed_points": 10.0,
+    "source_system": "Dean_Student_Welfare",
+    "evidence_ref": "EVID_ADM_002",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "ADM_003",
+    "faculty_id": "FAC001",
+    "title": "Member: Board of Studies & Curriculum Revision Committee",
+    "category": "Administrative",
+    "sub_category": "Governance_Body",
+    "period": "2025-2026",
+    "description": "Contributed to restructuring 2026 AI and Data Science undergraduate curriculum syllabus",
+    "claimed_points": 10.0,
+    "source_system": "Academic_Council_Office",
+    "evidence_ref": "EVID_ADM_003",
+    "evidence_status": "CLAIMED"
+  }
+]

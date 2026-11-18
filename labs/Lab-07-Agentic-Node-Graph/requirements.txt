@@ -1,0 +1,3 @@
+# Lab 7: Agentic Node Graph - Faculty Appraisal Management System
+# Standard library only - zero external dependencies required.
+# Python >= 3.10
