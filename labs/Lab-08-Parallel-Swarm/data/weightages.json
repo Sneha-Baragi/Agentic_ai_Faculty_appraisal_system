@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0-illustrative-mock",
+  "disclaimer": "These scoring weightages are illustrative mock values configured for Lab 8 hands-on demonstration and must never be construed as official UGC or institutional statutes.",
+  "category_weights": {
+    "Research": 0.40,
+    "Teaching_Learning": 0.40,
+    "Administrative": 0.20
+  },
+  "minimum_thresholds": {
+    "Research": 15.0,
+    "Teaching_Learning": 15.0,
+    "Administrative": 5.0
+  }
+}

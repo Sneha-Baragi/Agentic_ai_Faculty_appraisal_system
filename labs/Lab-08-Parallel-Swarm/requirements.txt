@@ -1,0 +1,9 @@
+# Lab 8 - Parallel Swarm: Faculty Appraisal Management System
+# Course: Agentic AI (26ECAC401)
+#
+# Requirements:
+# Python 3.10+ standard library only.
+# No external third-party dependencies are required.
+# Uses:
+# - concurrent.futures (ThreadPoolExecutor for genuine parallel swarm execution)
+# - dataclasses, typing, json, pathlib, uuid, time, datetime, argparse, unittest

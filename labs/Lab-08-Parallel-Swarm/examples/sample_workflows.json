@@ -1,0 +1,124 @@
+{
+  "scenario_a_success": {
+    "name": "Scenario A: Clean Parallel Swarm Success",
+    "description": "Full end-to-end appraisal with 3 concurrent collectors, verified evidence, clean merge, and HoD approval.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "consent": {
+      "research": true,
+      "teaching_learning": true,
+      "administrative": true
+    },
+    "test_injection": null,
+    "reviewer": {
+      "id": "REV_HOD_001",
+      "role": "HoD",
+      "decision": "APPROVED",
+      "comments": "All claims verified against institutional records. Recommended for promotion."
+    },
+    "expected_workflow_status": "APPROVED_AND_PUBLISHED",
+    "expected_publication_status": "APPROVED_AND_PUBLISHED"
+  },
+  "scenario_b_missing_evidence": {
+    "name": "Scenario B: Research Evidence Missing",
+    "description": "Research claim lacks supporting evidence document in official registry; score flagged provisional and publication blocked.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "test_injection": "MISSING_EVIDENCE",
+    "reviewer": {
+      "id": "REV_HOD_001",
+      "role": "HoD",
+      "decision": "APPROVED"
+    },
+    "expected_workflow_status": "BLOCKED_ON_EXCEPTIONS",
+    "expected_publication_status": "BLOCKED",
+    "expected_score_type": "PROVISIONAL"
+  },
+  "scenario_c_mismatched_evidence": {
+    "name": "Scenario C: Teaching Evidence Mismatched",
+    "description": "Teaching delivery certificate is registered under Research category; validation flags mismatch and blocks publication.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "test_injection": "MISMATCHED_EVIDENCE",
+    "reviewer": {
+      "id": "REV_HOD_001",
+      "role": "HoD",
+      "decision": "APPROVED"
+    },
+    "expected_workflow_status": "BLOCKED_ON_EXCEPTIONS",
+    "expected_publication_status": "BLOCKED"
+  },
+  "scenario_d_collector_failure": {
+    "name": "Scenario D: Specialist Collector Failure",
+    "description": "One collector (Research) encounters synthetic database connection failure; Teaching and Admin outputs are preserved, and merge reports partial collection.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "test_injection": "FAIL_RESEARCH",
+    "reviewer": {
+      "id": "REV_HOD_001",
+      "role": "HoD",
+      "decision": "APPROVED"
+    },
+    "expected_merge_status": "PARTIAL",
+    "expected_workflow_status": "BLOCKED_ON_EXCEPTIONS",
+    "expected_publication_status": "BLOCKED"
+  },
+  "scenario_e_consent_denied": {
+    "name": "Scenario E: Source Consent Denied (Consent-Limited)",
+    "description": "Faculty withholds consent for Research collection; Research collector skips and records denial, category is marked NOT_COLLECTED_CONSENT_DENIED (not verified zero), score is marked CONSENT_LIMITED, and publication is blocked without an authorized override.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "consent": {
+      "research": false,
+      "teaching_learning": true,
+      "administrative": true
+    },
+    "test_injection": null,
+    "reviewer": {
+      "id": "REV_HOD_001",
+      "role": "HoD",
+      "decision": "APPROVED"
+    },
+    "expected_research_count": 0,
+    "expected_score_type": "CONSENT_LIMITED",
+    "expected_workflow_status": "BLOCKED_ON_CONSENT",
+    "expected_publication_status": "BLOCKED"
+  },
+  "scenario_f_unauthorized_reviewer": {
+    "name": "Scenario F: Unauthorized Reviewer",
+    "description": "Approval attempted by an unauthorized role (Student Representative); governance gate rejects attempt and blocks publication.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "test_injection": null,
+    "reviewer": {
+      "id": "REV_STU_999",
+      "role": "Student_Representative",
+      "decision": "APPROVED",
+      "comments": "Attempted student approval."
+    },
+    "expected_workflow_status": "REJECTED",
+    "expected_publication_status": "BLOCKED"
+  },
+  "scenario_g_human_rejection": {
+    "name": "Scenario G: Human Rejection by Dean",
+    "description": "Collection and evidence validation succeed, but Dean exercises academic oversight and rejects report for insufficient contact hours.",
+    "faculty_id": "FAC001",
+    "faculty_name": "Dr. Ananya Sharma",
+    "appraisal_period": "2025-2026",
+    "test_injection": null,
+    "reviewer": {
+      "id": "REV_DEAN_001",
+      "role": "Dean",
+      "decision": "REJECTED",
+      "comments": "Instructional delivery hours documentation does not meet minimum 120 contact hour requirement."
+    },
+    "expected_workflow_status": "REJECTED",
+    "expected_publication_status": "BLOCKED"
+  }
+}

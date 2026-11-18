@@ -1,0 +1,69 @@
+[
+  {
+    "activity_id": "RES_001",
+    "faculty_id": "FAC001",
+    "title": "Autonomous Multi-Agent Routing in Heterogeneous Edge Networks",
+    "category": "Research",
+    "sub_category": "Journal_Publication",
+    "period": "2025-2026",
+    "description": "Published in IEEE Transactions on Network Science, Q1, Impact Factor 5.8",
+    "claimed_points": 25.0,
+    "source_system": "Research_Office_Portal",
+    "evidence_ref": "EVID_RES_001",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "RES_002",
+    "faculty_id": "FAC001",
+    "title": "SERB Funded Grant: Agentic Threat Modeling in Cyber-Physical Systems",
+    "category": "Research",
+    "sub_category": "Funded_Project",
+    "period": "2025-2026",
+    "description": "Principal Investigator for DST-SERB Core Research Grant of INR 32.5 Lakhs",
+    "claimed_points": 20.0,
+    "source_system": "Sponsored_Research_Office",
+    "evidence_ref": "EVID_RES_002",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "RES_003",
+    "faculty_id": "FAC001",
+    "title": "PhD Scholar Guidance: Graph Reasoning in Distributed Sensor Systems",
+    "category": "Research",
+    "sub_category": "PhD_Guidance",
+    "period": "2025-2026",
+    "description": "Sole supervisor for 1 doctoral candidate successfully defended in Nov 2025",
+    "claimed_points": 10.0,
+    "source_system": "Dean_Academic_Research",
+    "evidence_ref": "EVID_RES_003",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "RES_MISSING",
+    "faculty_id": "FAC001",
+    "title": "Unverified Preprint on Decentralized Learning",
+    "category": "Research",
+    "sub_category": "Preprint",
+    "period": "2025-2026",
+    "description": "Preprint manuscript deposited without peer-review or verification certificate",
+    "claimed_points": 15.0,
+    "source_system": "Self_Reported_Portal",
+    "evidence_ref": "EVID_NONEXISTENT_999",
+    "evidence_status": "CLAIMED",
+    "is_test_injection": "MISSING_EVIDENCE"
+  },
+  {
+    "activity_id": "RES_MISMATCH",
+    "faculty_id": "FAC001",
+    "title": "Collaborative Quantum Computing Survey Paper",
+    "category": "Research",
+    "sub_category": "Conference_Paper",
+    "period": "2025-2026",
+    "description": "Paper claimed by FAC001 but certificate issued to FAC002 in another department",
+    "claimed_points": 10.0,
+    "source_system": "Research_Office_Portal",
+    "evidence_ref": "EVID_RES_MISMATCH",
+    "evidence_status": "CLAIMED",
+    "is_test_injection": "MISMATCHED_EVIDENCE"
+  }
+]

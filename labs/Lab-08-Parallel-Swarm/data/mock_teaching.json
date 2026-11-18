@@ -1,0 +1,68 @@
+[
+  {
+    "activity_id": "TCH_001",
+    "faculty_id": "FAC001",
+    "title": "CS401: Distributed Computing (Lecture & Laboratory)",
+    "category": "Teaching_Learning",
+    "sub_category": "Instructional_Delivery",
+    "period": "2025-2026",
+    "description": "120 instructional hours delivered across Semester VII; 94% syllabus completion",
+    "claimed_points": 25.0,
+    "source_system": "Academic_Dean_ERP",
+    "evidence_ref": "EVID_TCH_001",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "TCH_002",
+    "faculty_id": "FAC001",
+    "title": "End-Semester Aggregate Student Feedback Rating: 4.65 / 5.0 (93%)",
+    "category": "Teaching_Learning",
+    "sub_category": "Student_Feedback",
+    "period": "2025-2026",
+    "description": "Official institutional aggregate feedback index based on 68 student evaluations",
+    "claimed_points": 15.0,
+    "source_system": "IQAC_Student_Feedback_Portal",
+    "evidence_ref": "EVID_TCH_002",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "TCH_003",
+    "faculty_id": "FAC001",
+    "title": "Course Outcome Attainment: 88.5% Direct and Indirect Assessment",
+    "category": "Teaching_Learning",
+    "sub_category": "Learning_Outcomes",
+    "period": "2025-2026",
+    "description": "Course Articulation Matrix and outcome target threshold achieved for 5 COs",
+    "claimed_points": 10.0,
+    "source_system": "OBE_Assessment_System",
+    "evidence_ref": "EVID_TCH_003",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "TCH_004",
+    "faculty_id": "FAC001",
+    "title": "ATAL 1-Week FDP on Generative AI and Autonomous Agent Design",
+    "category": "Teaching_Learning",
+    "sub_category": "FDP_Training",
+    "period": "2025-2026",
+    "description": "Completed 40-hour AICTE approved Faculty Development Programme with distinction",
+    "claimed_points": 10.0,
+    "source_system": "National_FDP_Portal",
+    "evidence_ref": "EVID_TCH_004",
+    "evidence_status": "CLAIMED"
+  },
+  {
+    "activity_id": "TCH_MISMATCH",
+    "faculty_id": "FAC001",
+    "title": "Inter-Departmental Curriculum Redesign Certificate",
+    "category": "Teaching_Learning",
+    "sub_category": "Instructional_Design",
+    "period": "2025-2026",
+    "description": "Teaching delivery certificate claimed under Teaching-Learning, but supporting document registered under Research category",
+    "claimed_points": 15.0,
+    "source_system": "Dean_Academic_Office",
+    "evidence_ref": "EVID_TCH_MISMATCH",
+    "evidence_status": "CLAIMED",
+    "is_test_injection": "MISMATCHED_EVIDENCE"
+  }
+]

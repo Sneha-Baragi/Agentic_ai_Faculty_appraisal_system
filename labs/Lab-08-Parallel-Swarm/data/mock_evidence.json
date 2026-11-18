@@ -1,0 +1,122 @@
+[
+  {
+    "evidence_id": "EVID_RES_001",
+    "faculty_id": "FAC001",
+    "category": "Research",
+    "document_name": "IEEE_Transactions_Published_Paper_TNS_2025.pdf",
+    "issuing_authority": "IEEE Computer Society Publications Board",
+    "issue_date": "2025-08-14",
+    "verified_checksum": "sha256:9f8e7d6c5b4a312019",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_RES_002",
+    "faculty_id": "FAC001",
+    "category": "Research",
+    "document_name": "SERB_Sanction_Order_CRG_2025_00412.pdf",
+    "issuing_authority": "Science & Engineering Research Board (DST)",
+    "issue_date": "2025-06-30",
+    "verified_checksum": "sha256:a1b2c3d4e5f6071829",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_RES_003",
+    "faculty_id": "FAC001",
+    "category": "Research",
+    "document_name": "PhD_Defence_Notification_Ref_782.pdf",
+    "issuing_authority": "Dean Academic Research Office",
+    "issue_date": "2025-11-20",
+    "verified_checksum": "sha256:b2c3d4e5f607182930",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_TCH_001",
+    "faculty_id": "FAC001",
+    "category": "Teaching_Learning",
+    "document_name": "Academic_Dean_Teaching_Load_Certification_2025_26.pdf",
+    "issuing_authority": "Dean of Academic Affairs",
+    "issue_date": "2026-01-10",
+    "verified_checksum": "sha256:c3d4e5f60718293041",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_TCH_002",
+    "faculty_id": "FAC001",
+    "category": "Teaching_Learning",
+    "document_name": "IQAC_Aggregate_Student_Feedback_Report_Sem_VII.pdf",
+    "issuing_authority": "Internal Quality Assurance Cell (IQAC)",
+    "issue_date": "2025-12-15",
+    "verified_checksum": "sha256:d4e5f6071829304152",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_TCH_003",
+    "faculty_id": "FAC001",
+    "category": "Teaching_Learning",
+    "document_name": "OBE_Outcome_Attainment_Audit_Statement.pdf",
+    "issuing_authority": "Department NBA / OBE Coordinator",
+    "issue_date": "2026-01-05",
+    "verified_checksum": "sha256:e5f607182930415263",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_TCH_004",
+    "faculty_id": "FAC001",
+    "category": "Teaching_Learning",
+    "document_name": "AICTE_ATAL_FDP_Completion_Certificate_Grade_A.pdf",
+    "issuing_authority": "AICTE Training and Learning (ATAL) Academy",
+    "issue_date": "2025-09-22",
+    "verified_checksum": "sha256:f60718293041526374",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_ADM_001",
+    "faculty_id": "FAC001",
+    "category": "Administrative",
+    "document_name": "HoD_Appointment_Letter_NBA_Criterion_Lead.pdf",
+    "issuing_authority": "Head of Computer Science & Engineering",
+    "issue_date": "2025-07-01",
+    "verified_checksum": "sha256:071829304152637485",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_ADM_002",
+    "faculty_id": "FAC001",
+    "category": "Administrative",
+    "document_name": "Dean_SW_Faculty_Advisor_Appreciation_Certificate.pdf",
+    "issuing_authority": "Dean of Student Welfare",
+    "issue_date": "2026-02-02",
+    "verified_checksum": "sha256:182930415263748596",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_ADM_003",
+    "faculty_id": "FAC001",
+    "category": "Administrative",
+    "document_name": "Registrar_Board_of_Studies_Meeting_Minutes.pdf",
+    "issuing_authority": "Office of the Registrar / Academic Council",
+    "issue_date": "2025-10-30",
+    "verified_checksum": "sha256:293041526374859607",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_RES_MISMATCH",
+    "faculty_id": "FAC002",
+    "category": "Research",
+    "document_name": "Quantum_Computing_Survey_Certificate_FAC002.pdf",
+    "issuing_authority": "National Research Foundation",
+    "issue_date": "2025-09-10",
+    "verified_checksum": "sha256:304152637485960718",
+    "status": "VALID"
+  },
+  {
+    "evidence_id": "EVID_TCH_MISMATCH",
+    "faculty_id": "FAC001",
+    "category": "Research",
+    "document_name": "Dean_Academic_Inter_Dept_Curriculum_Award.pdf",
+    "issuing_authority": "Dean Academic Research Office",
+    "issue_date": "2025-11-15",
+    "verified_checksum": "sha256:415263748596071829",
+    "status": "VALID"
+  }
+]
