@@ -1,0 +1,86 @@
+{
+  "base_runs": {
+    "run_1_summarize": {
+      "user": "uday",
+      "task": {
+        "skill": "summarize_notes",
+        "text": "Agentic AI systems combine goals tools skills memory"
+      },
+      "expected_word_count": 8,
+      "expected_status": "success"
+    },
+    "run_2_draft_email_success": {
+      "user": "uday",
+      "task": {
+        "skill": "draft_email",
+        "recipient": "Dr. Meena",
+        "subject": "Lab guide review"
+      },
+      "expected_email": "meena@example.edu",
+      "expected_status": "success"
+    },
+    "run_3_draft_email_failure": {
+      "user": "uday",
+      "task": {
+        "skill": "draft_email",
+        "recipient": "Unknown Person",
+        "subject": "Hello"
+      },
+      "expected_error": "Contact lookup failed",
+      "expected_status": "error"
+    },
+    "run_4_dynamic_translation": {
+      "user": "uday",
+      "task": {
+        "skill": "translate_text",
+        "text": "Hello, team",
+        "target_language": "Kannada"
+      },
+      "expected_translation": "[translated to Kannada] Hello, team",
+      "expected_status": "success"
+    },
+    "run_5_user_memory": {
+      "user_1": "uday",
+      "user_2": "priya"
+    }
+  },
+  "assignment_1_rate_limiting": {
+    "user": "uday",
+    "tasks": [
+      {
+        "skill": "summarize_notes",
+        "text": "First note for rate limit test"
+      },
+      {
+        "skill": "summarize_notes",
+        "text": "Second note for rate limit test"
+      },
+      {
+        "skill": "summarize_notes",
+        "text": "Third note for rate limit test"
+      },
+      {
+        "skill": "summarize_notes",
+        "text": "Fourth note that should be rejected"
+      }
+    ],
+    "secondary_user": "sneha",
+    "secondary_task": {
+      "skill": "summarize_notes",
+      "text": "Independent user note"
+    }
+  },
+  "assignment_2_failure_escalation": {
+    "user": "uday",
+    "failing_task": {
+      "skill": "draft_email",
+      "recipient": "Ghost Contact",
+      "subject": "Unavailable person"
+    },
+    "escalated_attempt": {
+      "skill": "draft_email",
+      "recipient": "Ghost Contact",
+      "subject": "Third attempt to be escalated"
+    }
+  }
+}
