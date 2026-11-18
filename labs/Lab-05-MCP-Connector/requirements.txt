@@ -1,0 +1,6 @@
+# Lab 5: MCP-Style Connector (Mini Integration Layer)
+# Course: Agentic AI (26ECAC401)
+#
+# This lab is implemented entirely using Python's standard library.
+# No external third-party packages or paid APIs are required.
+# Python 3.10+ recommended.

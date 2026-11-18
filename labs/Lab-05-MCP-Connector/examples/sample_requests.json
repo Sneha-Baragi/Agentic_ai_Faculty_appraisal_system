@@ -1,0 +1,60 @@
+{
+  "base_requests": [
+    {
+      "id": "req_1",
+      "user_request": "Read the README file.",
+      "target_capability": "read_file",
+      "expected_kind": "resource",
+      "expected_target": "README.md"
+    },
+    {
+      "id": "req_2",
+      "user_request": "Show me the campus event signup counts.",
+      "target_capability": "query_db",
+      "expected_kind": "tool",
+      "expected_query": "SELECT event, count FROM signups;"
+    },
+    {
+      "id": "req_3",
+      "user_request": "Which events are happening today?",
+      "target_capability": "call_api",
+      "expected_kind": "tool",
+      "expected_endpoint": "events_today"
+    }
+  ],
+  "assignment_1_request": {
+    "id": "req_assignment_1",
+    "user_request": "List the available files.",
+    "target_capability": "list_files",
+    "expected_kind": "resource"
+  },
+  "assignment_2_security": {
+    "safe_read": {
+      "user_request": "Read the announcements text file.",
+      "target_file": "announcements.txt",
+      "expected_status": "success"
+    },
+    "adversarial_probes": [
+      {
+        "description": "Parent directory traversal to backend secrets",
+        "path": "../../backend/.env",
+        "expected_error": "PERMISSION_DENIED"
+      },
+      {
+        "description": "Relative parent traversal to root lab README",
+        "path": "../README.md",
+        "expected_error": "PERMISSION_DENIED"
+      },
+      {
+        "description": "Windows system file absolute path",
+        "path": "C:\\Windows\\win.ini",
+        "expected_error": "PERMISSION_DENIED"
+      },
+      {
+        "description": "Unix root directory absolute path",
+        "path": "/some/unauthorized/file.txt",
+        "expected_error": "PERMISSION_DENIED"
+      }
+    ]
+  }
+}
