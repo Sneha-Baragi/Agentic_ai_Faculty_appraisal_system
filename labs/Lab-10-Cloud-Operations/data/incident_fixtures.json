@@ -1,0 +1,117 @@
+{
+  "simulation_disclaimer": "Local simulation fixture. No real cloud infrastructure or network calls are executed.",
+  "scenarios": {
+    "core_payments_regression": {
+      "scenario_id": "core_payments_regression",
+      "title": "Failed Deployment: payments-service v2.4.1 Regression",
+      "description": "Reference scenario: Payments service deploy correlates with NullPointerException on refund endpoint.",
+      "logs": [
+        {"ts": "14:00:00", "level": "INFO", "msg": "deploy started: payments-service v2.4.1"},
+        {"ts": "14:00:45", "level": "INFO", "msg": "deploy completed: payments-service v2.4.1"},
+        {"ts": "14:03:10", "level": "WARN", "msg": "refund endpoint latency elevated"},
+        {"ts": "14:03:40", "level": "ERROR", "msg": "refund endpoint: NullPointerException in RefundHandler"},
+        {"ts": "14:04:05", "level": "ERROR", "msg": "refund endpoint: NullPointerException in RefundHandler"},
+        {"ts": "14:04:30", "level": "ERROR", "msg": "refund endpoint: NullPointerException in RefundHandler"}
+      ],
+      "deploy_history": [
+        {"ts": "14:00:00", "service": "payments-service", "version": "v2.4.1", "prev_version": "v2.4.0"}
+      ],
+      "metrics": {
+        "baseline_error_rate": 0.5,
+        "current_error_rate": 1.6
+      },
+      "proposed_action": "rollback",
+      "expected_severity": "degraded",
+      "expected_risk": "high"
+    },
+    "assignment_1_db_pool_exhaustion": {
+      "scenario_id": "assignment_1_db_pool_exhaustion",
+      "title": "Assignment 1: Database Connection-Pool Exhaustion Incident",
+      "description": "Critical database connection pool exhaustion leading to widespread timeouts and service outage.",
+      "logs": [
+        {"ts": "10:15:00", "level": "INFO", "msg": "scheduled analytics batch job started: worker-db-sync"},
+        {"ts": "10:18:20", "level": "WARN", "msg": "database connection pool utilization at 92% (92/100 connections active)"},
+        {"ts": "10:19:05", "level": "ERROR", "msg": "database pool exhausted: ConnectionPoolTimeoutException waiting for idle connection in AuthHandler"},
+        {"ts": "10:19:35", "level": "ERROR", "msg": "database pool exhausted: ConnectionPoolTimeoutException waiting for idle connection in AuthHandler"},
+        {"ts": "10:20:00", "level": "ERROR", "msg": "database connection acquisition failed: pool timeout 30000ms exceeded in SessionManager"}
+      ],
+      "deploy_history": [
+        {"ts": "09:30:00", "service": "data-exporter", "version": "v1.2.0", "prev_version": "v1.1.9"}
+      ],
+      "metrics": {
+        "baseline_error_rate": 0.1,
+        "current_error_rate": 58.0
+      },
+      "proposed_action": "scale",
+      "expected_severity": "down",
+      "expected_risk": "high"
+    },
+    "assignment_2_safe_pod_restart": {
+      "scenario_id": "assignment_2_safe_pod_restart",
+      "title": "Assignment 2: Warning-Level Safe Auto-Remediation (Single Pod Restart)",
+      "description": "Single worker pod showing memory elevation at early_warning level, remediated via restart_single_pod.",
+      "logs": [
+        {"ts": "08:00:10", "level": "INFO", "msg": "routine pod telemetry collection active"},
+        {"ts": "08:05:20", "level": "WARN", "msg": "pod payments-worker-7c4d8f-x9z memory usage at 88%"},
+        {"ts": "08:06:00", "level": "WARN", "msg": "pod payments-worker-7c4d8f-x9z memory threshold 90% exceeded, unresponsive worker thread detected"}
+      ],
+      "deploy_history": [],
+      "metrics": {
+        "baseline_error_rate": 0.5,
+        "current_error_rate": 0.7
+      },
+      "proposed_action": "restart_single_pod",
+      "expected_severity": "early_warning",
+      "expected_risk": "low"
+    },
+    "edge_case_missing_deploy": {
+      "scenario_id": "edge_case_missing_deploy",
+      "title": "Edge Case: Errors Present with Missing Deployment History",
+      "description": "Errors observed in service without any matching previous release in deployment history.",
+      "logs": [
+        {"ts": "11:00:00", "level": "INFO", "msg": "monitoring probe started"},
+        {"ts": "11:02:10", "level": "ERROR", "msg": "catalog-service: failed to load product categories: RedisConnectionError"}
+      ],
+      "deploy_history": [],
+      "metrics": {
+        "baseline_error_rate": 0.2,
+        "current_error_rate": 1.2
+      },
+      "proposed_action": "rollback",
+      "expected_severity": "degraded",
+      "expected_risk": "high"
+    },
+    "edge_case_zero_baseline": {
+      "scenario_id": "edge_case_zero_baseline",
+      "title": "Edge Case: Zero Baseline Metric Rate",
+      "description": "Metrics payload has baseline_error_rate = 0.0, requiring explicit invalid handling.",
+      "logs": [
+        {"ts": "12:00:00", "level": "ERROR", "msg": "system failure in pipeline"}
+      ],
+      "deploy_history": [],
+      "metrics": {
+        "baseline_error_rate": 0.0,
+        "current_error_rate": 1.5
+      },
+      "proposed_action": "rollback",
+      "expected_severity": "invalid_metrics",
+      "expected_risk": "high"
+    },
+    "edge_case_unknown_action": {
+      "scenario_id": "edge_case_unknown_action",
+      "title": "Edge Case: Proposed Action Has Unknown Risk Classification",
+      "description": "An unrecognized remediation action must be rejected and never treated as low-risk.",
+      "logs": [
+        {"ts": "13:00:00", "level": "ERROR", "msg": "unhandled exception in cluster agent"}
+      ],
+      "deploy_history": [],
+      "metrics": {
+        "baseline_error_rate": 0.5,
+        "current_error_rate": 2.0
+      },
+      "proposed_action": "purge_all_cluster_caches",
+      "expected_severity": "degraded",
+      "expected_risk": "unknown"
+    }
+  }
+}

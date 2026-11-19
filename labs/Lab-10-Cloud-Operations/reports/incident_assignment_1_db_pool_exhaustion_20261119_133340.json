@@ -1,0 +1,49 @@
+{
+  "scenario_id": "assignment_1_db_pool_exhaustion",
+  "title": "Assignment 1: Database Connection-Pool Exhaustion Incident",
+  "description": "Critical database connection pool exhaustion leading to widespread timeouts and service outage.",
+  "observed_logs_count": 5,
+  "observed_deploys_count": 1,
+  "metrics": {
+    "baseline_error_rate": 0.1,
+    "current_error_rate": 58.0
+  },
+  "incident_start": "10:19:05",
+  "severity": "down",
+  "hypothesis": "Error rate rose starting 10:19:05, shortly after the 09:30:00 deploy of data-exporter v1.2.0. Errors are concentrated in the database_pool code path, consistent with a regression introduced in that release.",
+  "proposed_action": "scale",
+  "risk_level": "high",
+  "decision_trace": {
+    "scenario_id": "assignment_1_db_pool_exhaustion",
+    "incident_start": "10:19:05",
+    "severity": "down",
+    "severity_calculation": "Current error rate (58.0%) > 50.0% threshold -> DOWN (ratio: 580.0x)",
+    "affected_path": "database_pool",
+    "root_cause_hypothesis": "Error rate rose starting 10:19:05, shortly after the 09:30:00 deploy of data-exporter v1.2.0. Errors are concentrated in the database_pool code path, consistent with a regression introduced in that release.",
+    "proposed_action": "scale",
+    "risk_level": "high",
+    "execution_outcome": "AWAITING_APPROVAL",
+    "decision_reason": "Action 'scale' is classified as HIGH-RISK. Safety policy mandates formal human approval before execution, regardless of operational urgency.",
+    "action_executed": null,
+    "approval_request": {
+      "diagnosis": "Error rate rose starting 10:19:05, shortly after the 09:30:00 deploy of data-exporter v1.2.0. Errors are concentrated in the database_pool code path, consistent with a regression introduced in that release.",
+      "proposed_action": "scale",
+      "risk_if_wrong": "Resource consumption spike and cloud cost inflation if cluster capacity is exceeded.",
+      "rollback_plan": "Revert to v1.1.9; if that also errors, re-deploy v1.2.0.",
+      "status": "AWAITING HUMAN APPROVAL -- NOT EXECUTED",
+      "note": null
+    },
+    "urgency_noted": false
+  },
+  "approval_request": {
+    "diagnosis": "Error rate rose starting 10:19:05, shortly after the 09:30:00 deploy of data-exporter v1.2.0. Errors are concentrated in the database_pool code path, consistent with a regression introduced in that release.",
+    "proposed_action": "scale",
+    "risk_if_wrong": "Resource consumption spike and cloud cost inflation if cluster capacity is exceeded.",
+    "rollback_plan": "Revert to v1.1.9; if that also errors, re-deploy v1.2.0.",
+    "status": "AWAITING HUMAN APPROVAL -- NOT EXECUTED",
+    "note": null
+  },
+  "action_executed": null,
+  "generated_at": "2026-11-19T13:33:40.737924Z",
+  "simulation_disclaimer": "Simulation Disclaimer: This execution is a safe local simulation. No real cloud infrastructure, APIs, shell processes, or cloud mutations were executed."
+}

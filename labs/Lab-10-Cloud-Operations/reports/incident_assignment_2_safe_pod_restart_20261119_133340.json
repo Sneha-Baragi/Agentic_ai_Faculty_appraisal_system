@@ -1,0 +1,35 @@
+{
+  "scenario_id": "assignment_2_safe_pod_restart",
+  "title": "Assignment 2: Warning-Level Safe Auto-Remediation (Single Pod Restart)",
+  "description": "Single worker pod showing memory elevation at early_warning level, remediated via restart_single_pod.",
+  "observed_logs_count": 3,
+  "observed_deploys_count": 0,
+  "metrics": {
+    "baseline_error_rate": 0.5,
+    "current_error_rate": 0.7
+  },
+  "incident_start": null,
+  "severity": "early_warning",
+  "hypothesis": "No ERROR logs detected in the incident window. System operating at baseline or warning status.",
+  "proposed_action": "restart_single_pod",
+  "risk_level": "low",
+  "decision_trace": {
+    "scenario_id": "assignment_2_safe_pod_restart",
+    "incident_start": null,
+    "severity": "early_warning",
+    "severity_calculation": "Error rate ratio (1.4x) < 2.0 threshold -> EARLY_WARNING (0.7% vs baseline 0.5%)",
+    "affected_path": "worker_pod_runtime",
+    "root_cause_hypothesis": "No ERROR logs detected in the incident window. System operating at baseline or warning status.",
+    "proposed_action": "restart_single_pod",
+    "risk_level": "low",
+    "execution_outcome": "AUTO_EXECUTED",
+    "decision_reason": "Action 'restart_single_pod' is classified as LOW-RISK. Safe auto-remediation permitted in local simulation environment without requiring human approval.",
+    "action_executed": "restart_single_pod",
+    "approval_request": null,
+    "urgency_noted": false
+  },
+  "approval_request": null,
+  "action_executed": "restart_single_pod",
+  "generated_at": "2026-11-19T13:33:40.745941Z",
+  "simulation_disclaimer": "Simulation Disclaimer: This execution is a safe local simulation. No real cloud infrastructure, APIs, shell processes, or cloud mutations were executed."
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "scenario_id": "core_payments_regression",
+    "name": "Core Scenario: Failed payments-service v2.4.1 Deployment",
+    "urgency_prompt": true
+  },
+  {
+    "scenario_id": "assignment_1_db_pool_exhaustion",
+    "name": "Assignment 1: Database Connection-Pool Exhaustion",
+    "urgency_prompt": false
+  },
+  {
+    "scenario_id": "assignment_2_safe_pod_restart",
+    "name": "Assignment 2: Warning-Level Safe Auto-Remediation (restart_single_pod)",
+    "urgency_prompt": false
+  },
+  {
+    "scenario_id": "edge_case_missing_deploy",
+    "name": "Edge Case: Errors Present with Missing Deployment History",
+    "urgency_prompt": false
+  },
+  {
+    "scenario_id": "edge_case_zero_baseline",
+    "name": "Edge Case: Zero Baseline Metric Handling",
+    "urgency_prompt": false
+  },
+  {
+    "scenario_id": "edge_case_unknown_action",
+    "name": "Edge Case: Rejection of Unknown Remediation Action",
+    "urgency_prompt": false
+  }
+]
