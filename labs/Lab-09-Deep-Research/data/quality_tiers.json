@@ -1,0 +1,26 @@
+{
+  "policy_disclaimer": "Demonstration Policy Disclaimer: Evidence Quality Index (EQI) and Reliability metrics are project-defined heuristic demonstration policies for agentic evaluation, not official mathematical probabilities or regulatory standards.",
+  "tiers": {
+    "Tier 1: Peer-reviewed research": {
+      "weight": 1.0,
+      "description": "Formally peer-reviewed scientific and engineering research publications with methodology disclosure.",
+      "disclosure_rule": "Full inclusion with highest synthesis weight."
+    },
+    "Tier 2: Independent benchmark": {
+      "weight": 0.7,
+      "description": "Independent reproducible benchmarks, consortium evaluations, and open academic test suites.",
+      "disclosure_rule": "Full inclusion with secondary synthesis weight."
+    },
+    "Tier 3: Vendor engineering blog": {
+      "weight": 0.4,
+      "description": "Commercial engineering blogs, product whitepapers, and corporate technical reports.",
+      "disclosure_rule": "Full disclosure without suppression, discounted synthesis weight, and commercial caveat."
+    }
+  },
+  "formulas": {
+    "eqi_definition": "EQI = sum(w_i) / N",
+    "contradiction_severity": "Severity(S_a, S_b) = min(w(S_a), w(S_b))",
+    "reliability_score": "Reliability = EQI * (1.0 - 0.5 * max_severity)",
+    "governance_rule": "If max_severity >= 1.0, status is CONTESTED_TIER_1_CONFLICT and human_review_required is True."
+  }
+}
