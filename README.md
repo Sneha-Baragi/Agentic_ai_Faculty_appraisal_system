@@ -50,8 +50,8 @@ An enterprise-grade, governed multi-agent appraisal workflow system designed to 
 
 ### Team Members
 
-| Sl. No. | Name | USN | Division | Roll no |
-|:---:|:---|:---:|:---:|
+| Sl. No. | Name | USN | Division | Roll No. |
+|:---:|:---|:---:|:---:|:---:|
 | 1 | Sneha Sanjeevkumar Baragi | 01FE23BCI054 | A | 125 |
 | 2 | Bhagyashree Anand Mugalkhod | 01FE23BCI118 | A | 155 |
 | 3 | B V Om | 01FE23BCI055 | A | 126 |
