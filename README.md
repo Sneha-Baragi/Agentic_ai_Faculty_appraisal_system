@@ -256,13 +256,13 @@ The repository includes a comprehensive series of independent laboratory impleme
 | **Lab 06** | OpenClaw Personal Runtime | Completed | Lightweight personal agent runtime with session management, tool sandboxing, policy enforcement, and execution audit logging. | [Lab-06](./labs/Lab-06-OpenClaw-Runtime/) |
 | **Lab 07** | Agentic Node Graph | Completed | Graph-based multi-agent orchestration for faculty appraisal using parallel collectors, state merging, scoring, and human review gates. | [Lab-07](./labs/Lab-07-Agentic-Node-Graph/) |
 | **Lab 08** | Parallel Swarm | Completed | Swarm architecture with parallel domain workers, source-specific consent isolation, institutional overrides, and versioned report preservation. | [Lab-08](./labs/Lab-08-Parallel-Swarm/) |
-| **Lab 09** | Deep Research Agent | In Progress – Assigned to Team Members | Autonomous multi-source literature search, bibliographic citation cross-referencing, paper synthesis, and venue verification. | Assigned to team member (Pending push) |
-| **Lab 10** | Cloud Operations Agent | In Progress – Assigned to Team Members | Cloud telemetry inspection, automated container health monitoring, log anomaly detection, and operational self-healing. | Assigned to team member (Pending push) |
+| **Lab 09** | Deep Research Agent | Completed | Autonomous multi-source literature search, bibliographic citation cross-referencing, paper synthesis, and venue verification. | [Lab-09](./labs/Lab-09-Deep-Research/) |
+| **Lab 10** | Cloud Operations Agent | Completed | Cloud telemetry inspection, automated container health monitoring, log anomaly detection, and operational self-healing. | [Lab-10](./labs/Lab-10-Cloud-Operations/) |
 | **Lab 11** | Agentic SDLC Factory | In Progress – Assigned to Team Members | Autonomous software engineering pipeline automating user story decomposition, test-driven code generation, and CI/CD validation. | Assigned to team member (Pending push) |
 | **Lab 12** | Safety, Security & Governance | In Progress – Assigned to Team Members | Guardrail policy enforcement, prompt injection defense, sensitive PII redaction, role boundaries, and immutable audit ledgers. | Assigned to team member (Pending push) |
 
 > **Team Collaboration Note on Labs 09–12:**
-> Labs 9, 10, 11, and 12 are actively assigned to other team members who are developing their implementations independently. They will push their code, test suites, and documentation directly to this repository. The respective directory links will be added once their commits appear on the repository branch.
+> Labs 9 and 10 have been implemented, tested, and integrated into the main branch. Labs 11 and 12 remain assigned to team members who are developing their implementations independently. Their directory links will be added once their commits appear on the repository branch.
 
 > **Note on Capstone Assignments (Labs 13 & 14):**
 > Advanced curriculum modules **Lab 13 (Capstone Project Studio)** and **Lab 14 (Discipline-Specific Agents)** represent capstone-level syntheses and domain specializations designed to build upon the 12 core competencies above. They are maintained in curriculum planning without disrupting the foundational 12-assignment laboratory framework.
