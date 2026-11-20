@@ -1,0 +1,142 @@
+[
+  {
+    "story_id": "US-001",
+    "title": "Faculty Login with JWT Authentication",
+    "description": "As a faculty member, I want to log in securely so that I can access my appraisal dashboard.",
+    "acceptance_criteria": [
+      {
+        "criterion_id": "AC-001-1",
+        "description": "Given valid credentials, when I log in, then I receive a JWT token.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-001-2",
+        "description": "Given invalid credentials, when I log in, then I see an error message.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-001-3",
+        "description": "Given expired token, when I access a protected route, then I am redirected to login.",
+        "met": false
+      }
+    ],
+    "priority": "high",
+    "story_points": 5,
+    "epic": "Authentication"
+  },
+  {
+    "story_id": "US-002",
+    "title": "Faculty Research Submission Portal",
+    "description": "As a faculty member, I want to submit my research publications so that they are recorded in my appraisal profile.",
+    "acceptance_criteria": [
+      {
+        "criterion_id": "AC-002-1",
+        "description": "Given a valid DOI, when I submit a publication, then it is added to my profile.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-002-2",
+        "description": "Given a duplicate DOI, when I submit, then I receive a duplication warning.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-002-3",
+        "description": "Given a submitted publication, when I view my profile, then I see the citation count.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-002-4",
+        "description": "Given an invalid DOI format, when I submit, then I see a validation error.",
+        "met": false
+      }
+    ],
+    "priority": "high",
+    "story_points": 8,
+    "epic": "Research Management"
+  },
+  {
+    "story_id": "US-003",
+    "title": "Teaching Load Records Management",
+    "description": "As a department head, I want to record teaching loads for each faculty so that appraisals reflect actual contributions.",
+    "acceptance_criteria": [
+      {
+        "criterion_id": "AC-003-1",
+        "description": "Given a faculty member, when I add a course, then the teaching load is updated.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-003-2",
+        "description": "Given a teaching record, when I edit hours, then changes are persisted correctly.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-003-3",
+        "description": "Given a semester range, when I request a report, then I see aggregated teaching hours.",
+        "met": false
+      }
+    ],
+    "priority": "medium",
+    "story_points": 5,
+    "epic": "Teaching Management"
+  },
+  {
+    "story_id": "US-004",
+    "title": "Admin Appraisal Dashboard with Analytics",
+    "description": "As an administrator, I want a real-time dashboard showing appraisal progress so that I can monitor faculty performance trends.",
+    "acceptance_criteria": [
+      {
+        "criterion_id": "AC-004-1",
+        "description": "Given multiple faculty records, when I open the dashboard, then I see summary KPIs.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-004-2",
+        "description": "Given a date filter, when I apply it, then the dashboard data updates accordingly.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-004-3",
+        "description": "Given a department filter, when I select a department, then only that department's data is shown.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-004-4",
+        "description": "Given large datasets, when the dashboard loads, then it renders within 3 seconds.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-004-5",
+        "description": "Given exported data, when I download as CSV, then all visible rows are included.",
+        "met": false
+      }
+    ],
+    "priority": "medium",
+    "story_points": 13,
+    "epic": "Administration"
+  },
+  {
+    "story_id": "US-005",
+    "title": "Automated Appraisal Score Calculation",
+    "description": "As a system, I want to automatically calculate composite appraisal scores so that evaluations are objective and consistent.",
+    "acceptance_criteria": [
+      {
+        "criterion_id": "AC-005-1",
+        "description": "Given research, teaching, and service weights, when I calculate, then the composite score is correct.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-005-2",
+        "description": "Given a faculty member with no research, when I calculate, then the score is not null.",
+        "met": false
+      },
+      {
+        "criterion_id": "AC-005-3",
+        "description": "Given custom weight configurations, when I save and recalculate, then scores update accordingly.",
+        "met": false
+      }
+    ],
+    "priority": "high",
+    "story_points": 8,
+    "epic": "Appraisal Engine"
+  }
+]

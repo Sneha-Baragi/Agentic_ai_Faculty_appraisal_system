@@ -1,0 +1,250 @@
+{
+  "run_id": "5151493f-14a8-4eb6-83eb-cc37f6b2acb5",
+  "story_id": "US-001",
+  "story_title": "Faculty Login with JWT Authentication",
+  "pipeline_start": "2026-11-20T15:21:40.096265+00:00",
+  "pipeline_end": "2026-11-20T15:21:40.097264+00:00",
+  "total_duration_ms": 1.19,
+  "stage_results": [
+    {
+      "stage": "story_decomposition",
+      "status": "completed",
+      "duration_ms": 0.21,
+      "artifacts": [
+        "US-001-T01",
+        "US-001-T02",
+        "US-001-T03",
+        "US-001-T04",
+        "US-001-T05",
+        "US-001-T06"
+      ],
+      "logs": [
+        "Decomposed into 6 tasks."
+      ],
+      "metrics": {
+        "tasks_count": 6
+      }
+    },
+    {
+      "stage": "tdd_generation",
+      "status": "completed",
+      "duration_ms": 0.29,
+      "artifacts": [
+        "AC-001-1-UT",
+        "AC-001-2-UT",
+        "AC-001-3-UT",
+        "US-001-IT-04"
+      ],
+      "logs": [
+        "Generated 4 test cases (TDD \u2014 tests first)."
+      ],
+      "metrics": {
+        "test_count": 4
+      }
+    },
+    {
+      "stage": "code_generation",
+      "status": "completed",
+      "duration_ms": 0.09,
+      "artifacts": [
+        "ART-US-001"
+      ],
+      "logs": [
+        "Generated artifact ART-US-001 (255 lines, complexity=4)."
+      ],
+      "metrics": {
+        "code_lines": 255,
+        "complexity": 4,
+        "coverage_pct": 85.0
+      }
+    },
+    {
+      "stage": "code_review",
+      "status": "completed",
+      "duration_ms": 0.11,
+      "artifacts": [
+        "ART-US-001"
+      ],
+      "logs": [
+        "Review score: 100/100, approved=True, findings=0."
+      ],
+      "metrics": {
+        "score": 100,
+        "approved": true,
+        "findings": 0
+      }
+    },
+    {
+      "stage": "ci_build",
+      "status": "completed",
+      "duration_ms": 0.2,
+      "artifacts": [
+        "ART-US-001"
+      ],
+      "logs": [
+        "Build: PASSED, Tests: 4 passed / 0 failed / 0 skipped."
+      ],
+      "metrics": {
+        "build_success": true,
+        "tests_passed": 4,
+        "tests_failed": 0
+      }
+    },
+    {
+      "stage": "quality_gate",
+      "status": "completed",
+      "duration_ms": 0.07,
+      "artifacts": [],
+      "logs": [
+        "Quality gate: passed (5/5 checks passed)."
+      ],
+      "metrics": {
+        "status": "passed",
+        "pass_rate": 1.0,
+        "coverage_pct": 85.0
+      }
+    },
+    {
+      "stage": "cd_deploy",
+      "status": "completed",
+      "duration_ms": 0.1,
+      "artifacts": [
+        "ART-US-001"
+      ],
+      "logs": [
+        "Deployed to prod.faculty-appraisal.local: SUCCESS."
+      ],
+      "metrics": {
+        "deploy_target": "prod.faculty-appraisal.local",
+        "deploy_success": true
+      }
+    }
+  ],
+  "tasks_generated": 6,
+  "test_cases_generated": 4,
+  "code_artifact": {
+    "artifact_id": "ART-US-001",
+    "story_id": "US-001",
+    "module_name": "authentication.us_001",
+    "language": "Python",
+    "code_lines": 255,
+    "functions": [
+      "init_authentication",
+      "setup_us_001",
+      "implementation_us_001",
+      "unit_test_us_001",
+      "integration_test_us_001",
+      "review_us_001",
+      "documentation_us_001"
+    ],
+    "test_coverage_pct": 85.0,
+    "complexity_score": 4,
+    "docstring_coverage_pct": 90.0
+  },
+  "review_result": {
+    "artifact_id": "ART-US-001",
+    "reviewer": "CodeReviewerAgent",
+    "findings": [],
+    "approved": true,
+    "overall_score": 100
+  },
+  "cicd_report": {
+    "story_id": "US-001",
+    "build_success": true,
+    "build_duration_ms": 977.5,
+    "test_results": [
+      {
+        "test_id": "AC-001-1-UT",
+        "story_id": "US-001",
+        "test_name": "test_receive_a_ac1",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-001",
+          "criterion_id": "AC-001-1",
+          "scenario": "Given valid credentials, when I log in, then I receive a JWT"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 12.5
+      },
+      {
+        "test_id": "AC-001-2-UT",
+        "story_id": "US-001",
+        "test_name": "test_see_an_ac2",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-001",
+          "criterion_id": "AC-001-2",
+          "scenario": "Given invalid credentials, when I log in, then I see an erro"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 25.0
+      },
+      {
+        "test_id": "AC-001-3-UT",
+        "story_id": "US-001",
+        "test_name": "test_am_redirected_ac3",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-001",
+          "criterion_id": "AC-001-3",
+          "scenario": "Given expired token, when I access a protected route, then I"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 37.5
+      },
+      {
+        "test_id": "US-001-IT-04",
+        "story_id": "US-001",
+        "test_name": "test_integration_authentication_us-001",
+        "test_type": "integration",
+        "input_data": {
+          "story_id": "US-001",
+          "epic": "Authentication",
+          "all_criteria": [
+            "AC-001-1",
+            "AC-001-2",
+            "AC-001-3"
+          ]
+        },
+        "expected_output": {
+          "all_criteria_met": true
+        },
+        "actual_output": {
+          "all_criteria_met": true
+        },
+        "status": "pass",
+        "execution_time_ms": 50.0
+      }
+    ],
+    "tests_passed": 4,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "deploy_target": "prod.faculty-appraisal.local",
+    "deploy_success": true,
+    "deploy_duration_ms": 400.0
+  },
+  "quality_gate": {
+    "story_id": "US-001",
+    "test_pass_rate": 1.0,
+    "code_coverage_pct": 85.0,
+    "review_score": 100,
+    "critical_findings": 0,
+    "complexity_score": 4.0,
+    "status": "passed",
+    "gate_checks": {
+      "test_pass_rate": true,
+      "code_coverage": true,
+      "review_score": true,
+      "no_critical_findings": true,
+      "complexity": true
+    }
+  },
+  "final_status": "completed",
+  "simulation_disclaimer": "Simulation: No real code is compiled/executed/deployed."
+}

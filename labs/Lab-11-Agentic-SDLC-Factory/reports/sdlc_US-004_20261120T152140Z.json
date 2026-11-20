@@ -1,0 +1,306 @@
+{
+  "run_id": "dbb2dd8a-7860-4262-a8f8-9b8dd00ac671",
+  "story_id": "US-004",
+  "story_title": "Admin Appraisal Dashboard with Analytics",
+  "pipeline_start": "2026-11-20T15:21:40.103614+00:00",
+  "pipeline_end": "2026-11-20T15:21:40.104613+00:00",
+  "total_duration_ms": 1.12,
+  "stage_results": [
+    {
+      "stage": "story_decomposition",
+      "status": "completed",
+      "duration_ms": 0.23,
+      "artifacts": [
+        "US-004-T01",
+        "US-004-T02",
+        "US-004-T03",
+        "US-004-T04",
+        "US-004-T05",
+        "US-004-T06"
+      ],
+      "logs": [
+        "Decomposed into 6 tasks."
+      ],
+      "metrics": {
+        "tasks_count": 6
+      }
+    },
+    {
+      "stage": "tdd_generation",
+      "status": "completed",
+      "duration_ms": 0.17,
+      "artifacts": [
+        "AC-004-1-UT",
+        "AC-004-2-UT",
+        "AC-004-3-UT",
+        "AC-004-4-UT",
+        "AC-004-5-UT",
+        "US-004-IT-06",
+        "US-004-E2E-07"
+      ],
+      "logs": [
+        "Generated 7 test cases (TDD \u2014 tests first)."
+      ],
+      "metrics": {
+        "test_count": 7
+      }
+    },
+    {
+      "stage": "code_generation",
+      "status": "completed",
+      "duration_ms": 0.06,
+      "artifacts": [
+        "ART-US-004"
+      ],
+      "logs": [
+        "Generated artifact ART-US-004 (485 lines, complexity=7)."
+      ],
+      "metrics": {
+        "code_lines": 485,
+        "complexity": 7,
+        "coverage_pct": 91.0
+      }
+    },
+    {
+      "stage": "code_review",
+      "status": "completed",
+      "duration_ms": 0.13,
+      "artifacts": [
+        "ART-US-004"
+      ],
+      "logs": [
+        "Review score: 100/100, approved=True, findings=0."
+      ],
+      "metrics": {
+        "score": 100,
+        "approved": true,
+        "findings": 0
+      }
+    },
+    {
+      "stage": "ci_build",
+      "status": "completed",
+      "duration_ms": 0.17,
+      "artifacts": [
+        "ART-US-004"
+      ],
+      "logs": [
+        "Build: PASSED, Tests: 7 passed / 0 failed / 0 skipped."
+      ],
+      "metrics": {
+        "build_success": true,
+        "tests_passed": 7,
+        "tests_failed": 0
+      }
+    },
+    {
+      "stage": "quality_gate",
+      "status": "completed",
+      "duration_ms": 0.09,
+      "artifacts": [],
+      "logs": [
+        "Quality gate: passed (5/5 checks passed)."
+      ],
+      "metrics": {
+        "status": "passed",
+        "pass_rate": 1.0,
+        "coverage_pct": 91.0
+      }
+    },
+    {
+      "stage": "cd_deploy",
+      "status": "completed",
+      "duration_ms": 0.16,
+      "artifacts": [
+        "ART-US-004"
+      ],
+      "logs": [
+        "Deployed to prod.faculty-appraisal.local: SUCCESS."
+      ],
+      "metrics": {
+        "deploy_target": "prod.faculty-appraisal.local",
+        "deploy_success": true
+      }
+    }
+  ],
+  "tasks_generated": 6,
+  "test_cases_generated": 7,
+  "code_artifact": {
+    "artifact_id": "ART-US-004",
+    "story_id": "US-004",
+    "module_name": "administration.us_004",
+    "language": "Python",
+    "code_lines": 485,
+    "functions": [
+      "init_administration",
+      "setup_us_004",
+      "implementation_us_004",
+      "unit_test_us_004",
+      "integration_test_us_004",
+      "review_us_004",
+      "documentation_us_004"
+    ],
+    "test_coverage_pct": 91.0,
+    "complexity_score": 7,
+    "docstring_coverage_pct": 85.0
+  },
+  "review_result": {
+    "artifact_id": "ART-US-004",
+    "reviewer": "CodeReviewerAgent",
+    "findings": [],
+    "approved": true,
+    "overall_score": 100
+  },
+  "cicd_report": {
+    "story_id": "US-004",
+    "build_success": true,
+    "build_duration_ms": 1092.5,
+    "test_results": [
+      {
+        "test_id": "AC-004-1-UT",
+        "story_id": "US-004",
+        "test_name": "test_see_summary_ac1",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-004",
+          "criterion_id": "AC-004-1",
+          "scenario": "Given multiple faculty records, when I open the dashboard, t"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 12.5
+      },
+      {
+        "test_id": "AC-004-2-UT",
+        "story_id": "US-004",
+        "test_name": "test_apply_behaviour_ac2",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-004",
+          "criterion_id": "AC-004-2",
+          "scenario": "Given a date filter, when I apply it, then the dashboard dat"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 25.0
+      },
+      {
+        "test_id": "AC-004-3-UT",
+        "story_id": "US-004",
+        "test_name": "test_select_behaviour_ac3",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-004",
+          "criterion_id": "AC-004-3",
+          "scenario": "Given a department filter, when I select a department, then "
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 37.5
+      },
+      {
+        "test_id": "AC-004-4-UT",
+        "story_id": "US-004",
+        "test_name": "test_verify_behaviour_ac4",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-004",
+          "criterion_id": "AC-004-4",
+          "scenario": "Given large datasets, when the dashboard loads, then it rend"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 50.0
+      },
+      {
+        "test_id": "AC-004-5-UT",
+        "story_id": "US-004",
+        "test_name": "test_download_behaviour_ac5",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-004",
+          "criterion_id": "AC-004-5",
+          "scenario": "Given exported data, when I download as CSV, then all visibl"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 62.5
+      },
+      {
+        "test_id": "US-004-IT-06",
+        "story_id": "US-004",
+        "test_name": "test_integration_administration_us-004",
+        "test_type": "integration",
+        "input_data": {
+          "story_id": "US-004",
+          "epic": "Administration",
+          "all_criteria": [
+            "AC-004-1",
+            "AC-004-2",
+            "AC-004-3",
+            "AC-004-4",
+            "AC-004-5"
+          ]
+        },
+        "expected_output": {
+          "all_criteria_met": true
+        },
+        "actual_output": {
+          "all_criteria_met": true
+        },
+        "status": "pass",
+        "execution_time_ms": 75.0
+      },
+      {
+        "test_id": "US-004-E2E-07",
+        "story_id": "US-004",
+        "test_name": "test_e2e_administration_us-004_full_flow",
+        "test_type": "e2e",
+        "input_data": {
+          "story_id": "US-004",
+          "simulate_user": "faculty_member",
+          "flow": "complete"
+        },
+        "expected_output": {
+          "flow_completed": true,
+          "errors": []
+        },
+        "actual_output": {
+          "flow_completed": true,
+          "errors": []
+        },
+        "status": "pass",
+        "execution_time_ms": 87.5
+      }
+    ],
+    "tests_passed": 7,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "deploy_target": "prod.faculty-appraisal.local",
+    "deploy_success": true,
+    "deploy_duration_ms": 400.0
+  },
+  "quality_gate": {
+    "story_id": "US-004",
+    "test_pass_rate": 1.0,
+    "code_coverage_pct": 91.0,
+    "review_score": 100,
+    "critical_findings": 0,
+    "complexity_score": 7.0,
+    "status": "passed",
+    "gate_checks": {
+      "test_pass_rate": true,
+      "code_coverage": true,
+      "review_score": true,
+      "no_critical_findings": true,
+      "complexity": true
+    }
+  },
+  "final_status": "completed",
+  "simulation_disclaimer": "Simulation: No real code is compiled/executed/deployed."
+}

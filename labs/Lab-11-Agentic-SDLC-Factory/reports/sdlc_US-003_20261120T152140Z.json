@@ -1,0 +1,250 @@
+{
+  "run_id": "91aa568b-36eb-4f05-b280-08298d3df994",
+  "story_id": "US-003",
+  "story_title": "Teaching Load Records Management",
+  "pipeline_start": "2026-11-20T15:21:40.100306+00:00",
+  "pipeline_end": "2026-11-20T15:21:40.101304+00:00",
+  "total_duration_ms": 0.74,
+  "stage_results": [
+    {
+      "stage": "story_decomposition",
+      "status": "completed",
+      "duration_ms": 0.16,
+      "artifacts": [
+        "US-003-T01",
+        "US-003-T02",
+        "US-003-T03",
+        "US-003-T04",
+        "US-003-T05",
+        "US-003-T06"
+      ],
+      "logs": [
+        "Decomposed into 6 tasks."
+      ],
+      "metrics": {
+        "tasks_count": 6
+      }
+    },
+    {
+      "stage": "tdd_generation",
+      "status": "completed",
+      "duration_ms": 0.15,
+      "artifacts": [
+        "AC-003-1-UT",
+        "AC-003-2-UT",
+        "AC-003-3-UT",
+        "US-003-IT-04"
+      ],
+      "logs": [
+        "Generated 4 test cases (TDD \u2014 tests first)."
+      ],
+      "metrics": {
+        "test_count": 4
+      }
+    },
+    {
+      "stage": "code_generation",
+      "status": "completed",
+      "duration_ms": 0.04,
+      "artifacts": [
+        "ART-US-003"
+      ],
+      "logs": [
+        "Generated artifact ART-US-003 (255 lines, complexity=4)."
+      ],
+      "metrics": {
+        "code_lines": 255,
+        "complexity": 4,
+        "coverage_pct": 94.0
+      }
+    },
+    {
+      "stage": "code_review",
+      "status": "completed",
+      "duration_ms": 0.08,
+      "artifacts": [
+        "ART-US-003"
+      ],
+      "logs": [
+        "Review score: 100/100, approved=True, findings=0."
+      ],
+      "metrics": {
+        "score": 100,
+        "approved": true,
+        "findings": 0
+      }
+    },
+    {
+      "stage": "ci_build",
+      "status": "completed",
+      "duration_ms": 0.09,
+      "artifacts": [
+        "ART-US-003"
+      ],
+      "logs": [
+        "Build: PASSED, Tests: 4 passed / 0 failed / 0 skipped."
+      ],
+      "metrics": {
+        "build_success": true,
+        "tests_passed": 4,
+        "tests_failed": 0
+      }
+    },
+    {
+      "stage": "quality_gate",
+      "status": "completed",
+      "duration_ms": 0.06,
+      "artifacts": [],
+      "logs": [
+        "Quality gate: passed (5/5 checks passed)."
+      ],
+      "metrics": {
+        "status": "passed",
+        "pass_rate": 1.0,
+        "coverage_pct": 94.0
+      }
+    },
+    {
+      "stage": "cd_deploy",
+      "status": "completed",
+      "duration_ms": 0.09,
+      "artifacts": [
+        "ART-US-003"
+      ],
+      "logs": [
+        "Deployed to prod.faculty-appraisal.local: SUCCESS."
+      ],
+      "metrics": {
+        "deploy_target": "prod.faculty-appraisal.local",
+        "deploy_success": true
+      }
+    }
+  ],
+  "tasks_generated": 6,
+  "test_cases_generated": 4,
+  "code_artifact": {
+    "artifact_id": "ART-US-003",
+    "story_id": "US-003",
+    "module_name": "teaching_management.us_003",
+    "language": "Python",
+    "code_lines": 255,
+    "functions": [
+      "init_teaching_management",
+      "setup_us_003",
+      "implementation_us_003",
+      "unit_test_us_003",
+      "integration_test_us_003",
+      "review_us_003",
+      "documentation_us_003"
+    ],
+    "test_coverage_pct": 94.0,
+    "complexity_score": 4,
+    "docstring_coverage_pct": 81.0
+  },
+  "review_result": {
+    "artifact_id": "ART-US-003",
+    "reviewer": "CodeReviewerAgent",
+    "findings": [],
+    "approved": true,
+    "overall_score": 100
+  },
+  "cicd_report": {
+    "story_id": "US-003",
+    "build_success": true,
+    "build_duration_ms": 977.5,
+    "test_results": [
+      {
+        "test_id": "AC-003-1-UT",
+        "story_id": "US-003",
+        "test_name": "test_add_behaviour_ac1",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-003",
+          "criterion_id": "AC-003-1",
+          "scenario": "Given a faculty member, when I add a course, then the teachi"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 12.5
+      },
+      {
+        "test_id": "AC-003-2-UT",
+        "story_id": "US-003",
+        "test_name": "test_edit_behaviour_ac2",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-003",
+          "criterion_id": "AC-003-2",
+          "scenario": "Given a teaching record, when I edit hours, then changes are"
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 25.0
+      },
+      {
+        "test_id": "AC-003-3-UT",
+        "story_id": "US-003",
+        "test_name": "test_see_aggregated_ac3",
+        "test_type": "unit",
+        "input_data": {
+          "story_id": "US-003",
+          "criterion_id": "AC-003-3",
+          "scenario": "Given a semester range, when I request a report, then I see "
+        },
+        "expected_output": true,
+        "actual_output": true,
+        "status": "pass",
+        "execution_time_ms": 37.5
+      },
+      {
+        "test_id": "US-003-IT-04",
+        "story_id": "US-003",
+        "test_name": "test_integration_teaching_management_us-003",
+        "test_type": "integration",
+        "input_data": {
+          "story_id": "US-003",
+          "epic": "Teaching Management",
+          "all_criteria": [
+            "AC-003-1",
+            "AC-003-2",
+            "AC-003-3"
+          ]
+        },
+        "expected_output": {
+          "all_criteria_met": true
+        },
+        "actual_output": {
+          "all_criteria_met": true
+        },
+        "status": "pass",
+        "execution_time_ms": 50.0
+      }
+    ],
+    "tests_passed": 4,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "deploy_target": "prod.faculty-appraisal.local",
+    "deploy_success": true,
+    "deploy_duration_ms": 400.0
+  },
+  "quality_gate": {
+    "story_id": "US-003",
+    "test_pass_rate": 1.0,
+    "code_coverage_pct": 94.0,
+    "review_score": 100,
+    "critical_findings": 0,
+    "complexity_score": 4.0,
+    "status": "passed",
+    "gate_checks": {
+      "test_pass_rate": true,
+      "code_coverage": true,
+      "review_score": true,
+      "no_critical_findings": true,
+      "complexity": true
+    }
+  },
+  "final_status": "completed",
+  "simulation_disclaimer": "Simulation: No real code is compiled/executed/deployed."
+}

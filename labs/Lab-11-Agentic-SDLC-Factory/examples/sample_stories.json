@@ -1,0 +1,20 @@
+[
+  {
+    "scenario": "Happy path: JWT authentication story runs full pipeline successfully",
+    "story_id": "US-001",
+    "expected_final_status": "completed",
+    "notes": "5-point story with 3 ACs; all quality gates should pass."
+  },
+  {
+    "scenario": "Medium complexity: Research submission portal with 4 ACs",
+    "story_id": "US-002",
+    "expected_final_status": "completed",
+    "notes": "8-point story; exercises DOI validation and duplication detection paths."
+  },
+  {
+    "scenario": "Admin dashboard — large story with 5 ACs and 13 points",
+    "story_id": "US-004",
+    "expected_final_status": "completed",
+    "notes": "High complexity triggers additional review scrutiny."
+  }
+]
