@@ -1,0 +1,23 @@
+[
+  {
+    "topic_id": "topic_01_full_rag_briefing",
+    "title": "Comprehensive AI Topic Briefing: RAG Factual Reliability, Latency, and Complex Reasoning",
+    "research_question": "Does Retrieval-Augmented Generation (RAG) reliably reduce factual hallucinations in Large Language Models, and what are the empirical trade-offs regarding accuracy, latency overhead, and reasoning complexity?",
+    "include_sources": ["S1", "S2", "S3", "S4"],
+    "description": "Full official Lab 9 scenario demonstrating all 4 sources, Assignment 1 direct contradiction (S1 vs S4), Assignment 2 quality tiers, and governance gate."
+  },
+  {
+    "topic_id": "topic_02_baseline_three_sources",
+    "title": "Baseline 3-Source Topic Briefing (S1, S2, S3)",
+    "research_question": "What is the initial literature consensus on RAG accuracy improvements and latency overheads prior to multi-hop evaluation?",
+    "include_sources": ["S1", "S2", "S3"],
+    "description": "Demonstrates the initial 3-source workflow without the S4 contradiction, showing baseline consensus and evidence gaps."
+  },
+  {
+    "topic_id": "topic_03_faculty_appraisal_evaluation",
+    "title": "Faculty Appraisal Claim Evaluation: RAG Architecture for Academic Portals",
+    "research_question": "A faculty member claims their published RAG design eliminates hallucinations with negligible overhead. Does tiered empirical evidence support this claim?",
+    "include_sources": ["S1", "S2", "S3", "S4"],
+    "description": "Appraisal committee evaluation scenario: tests faculty research claim against independent benchmarks and counter-evidence."
+  }
+]

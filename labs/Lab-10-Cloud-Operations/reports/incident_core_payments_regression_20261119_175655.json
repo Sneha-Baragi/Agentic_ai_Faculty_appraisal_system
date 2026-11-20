@@ -1,0 +1,49 @@
+{
+  "scenario_id": "core_payments_regression",
+  "title": "Failed Deployment: payments-service v2.4.1 Regression",
+  "description": "Reference scenario: Payments service deploy correlates with NullPointerException on refund endpoint.",
+  "observed_logs_count": 6,
+  "observed_deploys_count": 1,
+  "metrics": {
+    "baseline_error_rate": 0.5,
+    "current_error_rate": 1.6
+  },
+  "incident_start": "14:03:40",
+  "severity": "degraded",
+  "hypothesis": "Error rate rose starting 14:03:40, shortly after the 14:00:00 deploy of payments-service v2.4.1. Errors are concentrated in the refund code path, consistent with a regression introduced in that release.",
+  "proposed_action": "rollback",
+  "risk_level": "high",
+  "decision_trace": {
+    "scenario_id": "core_payments_regression",
+    "incident_start": "14:03:40",
+    "severity": "degraded",
+    "severity_calculation": "Error rate ratio (3.2x) >= 2.0 threshold -> DEGRADED (1.6% vs baseline 0.5%)",
+    "affected_path": "refund",
+    "root_cause_hypothesis": "Error rate rose starting 14:03:40, shortly after the 14:00:00 deploy of payments-service v2.4.1. Errors are concentrated in the refund code path, consistent with a regression introduced in that release.",
+    "proposed_action": "rollback",
+    "risk_level": "high",
+    "execution_outcome": "AWAITING_APPROVAL",
+    "decision_reason": "Action 'rollback' is classified as HIGH-RISK. Safety policy mandates formal human approval before execution, regardless of operational urgency.",
+    "action_executed": null,
+    "approval_request": {
+      "diagnosis": "Error rate rose starting 14:03:40, shortly after the 14:00:00 deploy of payments-service v2.4.1. Errors are concentrated in the refund code path, consistent with a regression introduced in that release.",
+      "proposed_action": "rollback",
+      "risk_if_wrong": "Brief service interruption (~30s) during pod recreation if hypothesis is incorrect.",
+      "rollback_plan": "Revert to v2.4.0; if that also errors, re-deploy v2.4.1.",
+      "status": "AWAITING HUMAN APPROVAL -- NOT EXECUTED",
+      "note": "Urgency noted, but high-risk action still requires human approval -- not bypassing the gate."
+    },
+    "urgency_noted": true
+  },
+  "approval_request": {
+    "diagnosis": "Error rate rose starting 14:03:40, shortly after the 14:00:00 deploy of payments-service v2.4.1. Errors are concentrated in the refund code path, consistent with a regression introduced in that release.",
+    "proposed_action": "rollback",
+    "risk_if_wrong": "Brief service interruption (~30s) during pod recreation if hypothesis is incorrect.",
+    "rollback_plan": "Revert to v2.4.0; if that also errors, re-deploy v2.4.1.",
+    "status": "AWAITING HUMAN APPROVAL -- NOT EXECUTED",
+    "note": "Urgency noted, but high-risk action still requires human approval -- not bypassing the gate."
+  },
+  "action_executed": null,
+  "generated_at": "2026-11-19T17:56:55.250788Z",
+  "simulation_disclaimer": "Simulation Disclaimer: This execution is a safe local simulation. No real cloud infrastructure, APIs, shell processes, or cloud mutations were executed."
+}
