@@ -258,11 +258,11 @@ The repository includes a comprehensive series of independent laboratory impleme
 | **Lab 08** | Parallel Swarm | Completed | Swarm architecture with parallel domain workers, source-specific consent isolation, institutional overrides, and versioned report preservation. | [Lab-08](./labs/Lab-08-Parallel-Swarm/) |
 | **Lab 09** | Deep Research Agent | Completed | Autonomous multi-source literature search, bibliographic citation cross-referencing, paper synthesis, and venue verification. | [Lab-09](./labs/Lab-09-Deep-Research/) |
 | **Lab 10** | Cloud Operations Agent | Completed | Cloud telemetry inspection, automated container health monitoring, log anomaly detection, and operational self-healing. | [Lab-10](./labs/Lab-10-Cloud-Operations/) |
-| **Lab 11** | Agentic SDLC Factory | In Progress – Assigned to Team Members | Autonomous software engineering pipeline automating user story decomposition, test-driven code generation, and CI/CD validation. | Assigned to team member (Pending push) |
-| **Lab 12** | Safety, Security & Governance | In Progress – Assigned to Team Members | Guardrail policy enforcement, prompt injection defense, sensitive PII redaction, role boundaries, and immutable audit ledgers. | Assigned to team member (Pending push) |
+| **Lab 11** | Agentic SDLC Factory | Completed | Autonomous software engineering pipeline automating user story decomposition, test-driven code generation, and CI/CD validation. | [Lab-11](./labs/Lab-11-Agentic-SDLC-Factory/) |
+| **Lab 12** | Safety, Security & Governance | Completed | Guardrail policy enforcement, prompt injection defense, sensitive PII redaction, role boundaries, and immutable audit ledgers. | [Lab-12](./labs/Lab-12-Safety-and-Governance/) |
 
-> **Team Collaboration Note on Labs 09–12:**
-> Labs 9 and 10 have been implemented, tested, and integrated into the main branch. Labs 11 and 12 remain assigned to team members who are developing their implementations independently. Their directory links will be added once their commits appear on the repository branch.
+> **Team Collaboration Note on Labs 01–12:**
+> All 12 laboratory assignments (Labs 01–12) have been fully implemented, tested, and integrated into the repository. Each lab is maintained as an independent, runnable module with its own dependencies, test suites, and documentation.
 
 > **Note on Capstone Assignments (Labs 13 & 14):**
 > Advanced curriculum modules **Lab 13 (Capstone Project Studio)** and **Lab 14 (Discipline-Specific Agents)** represent capstone-level syntheses and domain specializations designed to build upon the 12 core competencies above. They are maintained in curriculum planning without disrupting the foundational 12-assignment laboratory framework.
